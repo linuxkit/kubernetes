@@ -1,0 +1,5 @@
+*.iso
+kube-*-kernel
+kube-*-cmdline
+kube-*-initrd.img
+kube-weave.yaml
