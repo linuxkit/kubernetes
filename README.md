@@ -2,17 +2,37 @@
 
 This project aims to demonstrate how one can create minimal and immutable Kubernetes OS images with LinuxKit.
 
-Make sure to `cd projects/kubernetes` first.
+## Build requirements
 
-Build OS images:
+To build images you will need the [Moby tool](https://github.com/moby/tool), and to rebuild the individual packages you will need the [LinuxKit tool](https://github.com/linuxkit/linuxkit/tree/master/src/cmd/linuxkit)
+
+If you already have `go` installed you can use `go get -u github.com/moby/tool/cmd/moby` to install the `moby` build tool, and `go get -u github.com/linuxkit/linuxkit/src/cmd/linuxkit` to install the `linuxkit` tool.
+
+On MacOS there is a `brew tap` available. Detailed instructions are at [linuxkit/homebrew-linuxkit](https://github.com/linuxkit/homebrew-linuxkit), the short summary is
 ```
-make build-vm-images
+brew tap linuxkit/linuxkit
+brew install --HEAD moby
+brew install --HEAD linuxkit
+```
+
+Build requirements from source:
+- GNU `make`
+- Docker
+- optionally `qemu`
+
+## Building OS images
+
+To build the default OS images:
+```
+make all
 ```
 
 By default this will build images using Docker Engine for execution. To instead use cri-containerd use:
 ```
-make build-vm-images KUBE_RUNTIME=cri-containerd
+make all KUBE_RUNTIME=cri-containerd
 ```
+
+## Booting and initialising OS images
 
 Boot Kubernetes master OS image using `hyperkit` on macOS: or `qemu` on Linux:
 ```

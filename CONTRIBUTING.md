@@ -1,8 +1,8 @@
-# Contributing to LinuxKit
+# Contributing to LinuxKit/Kubernetes
 
 Want to hack on this project? Awesome! Here are instructions to get you started.
 
-Additional information can be found in the docs:
+Additional information can be found in the docs of the main LinuxKit project:
 [issue triage](https://github.com/linuxkit/linuxkit/blob/master/docs/issue-triage.md),
  and [review process](https://github.com/linuxkit/linuxkit/blob/master/docs/reviewing.md).
 
