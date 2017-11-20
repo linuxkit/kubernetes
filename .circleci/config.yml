@@ -1,0 +1,198 @@
+linuxkit_pkg_build: &linuxkit_pkg_build
+  docker:
+    - image: debian:stretch
+  steps:
+    - run:
+        name: Configure $PATH
+        command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+    - run:
+        name: Install packages
+        # ca-certificates are needed for attach_workspace (and git over https)
+        command: apt-get update && apt-get install -y ca-certificates git openssh-client
+    - attach_workspace:
+        at: /workspace
+    - checkout
+    - setup_remote_docker:
+        version: 17.06.1-ce
+    - run:
+        name: Docker version
+        command: |
+          docker version
+    - run:
+        name: Building package
+        command: |
+          PKG=${CIRCLE_JOB#pkg-}
+          mkdir /workspace/images
+          linuxkit pkg build pkg/$PKG
+          docker image ls
+          linuxkit pkg show-tag pkg/$PKG > /workspace/images/$PKG.tag
+          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+    - persist_to_workspace:
+        root: /workspace
+        paths: images
+
+image_cache_build: &image_cache_build
+  docker:
+    - image: debian:stretch
+  steps:
+    - run:
+        name: Configure $PATH
+        command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+    - run:
+        name: Install packages
+        # ca-certificates are needed for attach_workspace (and git over https)
+        command: apt-get update && apt-get install -y ca-certificates git make openssh-client
+    - attach_workspace:
+        at: /workspace
+    - checkout
+    - setup_remote_docker:
+        version: 17.06.1-ce
+    - run:
+        name: Docker version
+        command: |
+          docker version
+    - run:
+        name: Building package
+        command: |
+          CACHE=${CIRCLE_JOB#pkg-image-cache-}
+          PKG=kubernetes-docker-image-cache-$CACHE
+          mkdir /workspace/images
+          make --no-print-directory -C pkg/image-cache build-$CACHE
+          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/images/$PKG.tag
+          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+    - persist_to_workspace:
+        root: /workspace
+        paths: images
+
+version: 2
+jobs:
+  dependencies:
+    docker:
+      - image: debian:stretch
+    steps:
+      - run:
+          name: Create workspace
+          command: mkdir -p /workspace/bin
+      - run:
+          name: Install packages
+          command: apt-get update && apt-get install -y ca-certificates curl
+      - run:
+          name: Fetch binaries
+          command: |
+            curl -fsSL -o /workspace/bin/linuxkit https://152-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/moby https://309-89286561-gh.circle-artifacts.com/0/moby-linux
+            curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
+            tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
+
+            sha256sum /workspace/bin/*
+
+            sha256sum -c <<EOF
+            6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
+            ae8355a9bb3cf8197c8c9b1afec1e53622e0e40b2680736bc4f45565c7aea1b9  /workspace/bin/linuxkit
+            eb1df021470bc9f528ae2c55c4a802cb34e8935fa130be90bf9b147a39ec4822  /workspace/bin/moby
+            EOF
+      - run:
+          name: Versions
+          command: |
+             chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
+             chmod +x /workspace/bin/moby && /workspace/bin/moby version
+             chmod +x /workspace/bin/docker # broken? && /workspace/bin/docker version
+      - persist_to_workspace:
+          root: /workspace
+          paths: bin
+
+  check-hashes:
+    docker:
+      - image: debian:stretch
+    steps:
+      - run:
+          name: Configure $PATH
+          command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Install packages
+          # ca-certificates are needed for attach_workspace (and git over https)
+          command: apt-get update && apt-get install -y ca-certificates git make openssh-client
+      - attach_workspace:
+          at: /workspace
+      - checkout
+      - run:
+          name: Check hashes
+          command: |
+            for tag in $(linuxkit pkg show-tag pkg/kubelet) \
+                       $(linuxkit pkg show-tag pkg/cri-containerd) \
+                       $(make --no-print-directory -C pkg/image-cache show-tag-common) \
+                       $(make --no-print-directory -C pkg/image-cache show-tag-control-plane) ; do
+                image=${tag%:*}
+                git grep -E -l "\b$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$image:[[:xdigit:]]"'\{40\}'",$tag,g"
+            done
+            if ! git diff --exit-code ; then
+                echo ""
+                echo "*** Hashes are not up to date."
+                exit 1
+            fi
+
+  pkg-cri-containerd:
+    <<: *linuxkit_pkg_build
+  pkg-kubelet:
+    <<: *linuxkit_pkg_build
+
+  pkg-image-cache-common:
+    <<: *image_cache_build
+  pkg-image-cache-control-plane:
+    <<: *image_cache_build
+
+  pkgs:
+    docker:
+      - image: debian:stretch
+    steps:
+      - run:
+          name: Configure $PATH
+          command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Install packages
+          # ca-certificates are needed for attach_workspace (and git over https)
+          command: apt-get update && apt-get install -y ca-certificates
+      - attach_workspace:
+          at: /workspace
+      - checkout
+      - setup_remote_docker:
+          version: 17.06.1-ce
+      - run:
+          name: Docker version
+          command: |
+            docker version
+            docker image ls
+      - run:
+          name: Import images
+          command: |
+            for pkg in kubelet cri-containerd kubernetes-docker-image-cache-common kubernetes-docker-image-cache-control-plane; do
+               docker image load -i /workspace/images/$pkg.tar
+            done
+            docker image ls
+workflows:
+  version: 2
+  build:
+    jobs:
+      - dependencies
+      - check-hashes:
+          requires:
+            - dependencies
+
+      - pkg-kubelet:
+          requires:
+            - dependencies
+      - pkg-cri-containerd:
+          requires:
+            - dependencies
+      - pkg-image-cache-common:
+          requires:
+            - dependencies
+      - pkg-image-cache-control-plane:
+          requires:
+            - dependencies
+      - pkgs:
+          requires:
+            - pkg-kubelet
+            - pkg-cri-containerd
+            - pkg-image-cache-common
+            - pkg-image-cache-control-plane

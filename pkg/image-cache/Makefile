@@ -11,16 +11,20 @@ dl/%.tar:
 	@set -e ; \
 	builddir=$$(mktemp -d $(CACHE).XXXXXX) ; \
 	trap 'rm -rf $${builddir}' EXIT ; \
-	ln $(IMAGES) $${builddir} ; \
+	if [ -n "$(IMAGES)" ] ; then ln $(IMAGES) $${builddir} ; fi ; \
 	$(MAKE) -f Makefile.pkg BUILDDIR=$${builddir} CACHE=$(CACHE) $*
 
-.PHONY: build-common forcebuild-common push-common forcepush-common show-tag-common
-build-common forcebuild-common push-common forcepush-common show-tag-common: %-common: $(patsubst %,dl/%.tar,$(COMMON_IMAGES))
+.PHONY: build-common forcebuild-common push-common forcepush-common
+build-common forcebuild-common push-common forcepush-common: %-common: $(patsubst %,dl/%.tar,$(COMMON_IMAGES))
 	@$(MAKE) CACHE=common IMAGES="$^" $*-pkg
 
-.PHONY: build-control-plane forcebuild-control-plane push-control-plane forcepush-control-plane show-tag-control-plane
-build-control-plane forcebuild-control-plane push-control-plane forcepush-control-plane show-tag-control-plane: %-control-plane: $(patsubst %,dl/%.tar,$(CONTROL_PLANE_IMAGES))
+.PHONY: build-control-plane forcebuild-control-plane push-control-plane forcepush-control-plane
+build-control-plane forcebuild-control-plane push-control-plane forcepush-control-plane: %-control-plane: $(patsubst %,dl/%.tar,$(CONTROL_PLANE_IMAGES))
 	@$(MAKE) CACHE=control-plane IMAGES="$^" $*-pkg
+
+.PHONY: show-tag-common show-tag-control-plane
+show-tag-common show-tag-control-plane: show-tag-%:
+	@$(MAKE) CACHE=$* IMAGES="" show-tag-pkg
 
 .PHONY: build forcebuild push forcepush show-tags
 build: build-common build-control-plane
