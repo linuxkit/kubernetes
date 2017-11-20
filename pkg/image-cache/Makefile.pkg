@@ -12,10 +12,10 @@ push: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
 forcepush: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
 	linuxkit pkg push -force -hash-path . $(BUILDDIR)
 
-tag: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
+build: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
 	linuxkit pkg build -hash-path . $(BUILDDIR)
 
-forcetag: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
+forcebuild: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
 	linuxkit pkg build --force -hash-path . $(BUILDDIR)
 
 show-tag: $(BUILDDIR)/build.yml $(BUILDDIR)/Dockerfile
