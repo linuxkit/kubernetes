@@ -1,6 +1,5 @@
-org: linuxkitprojects
+org: linuxkit
 image: cri-containerd
 network: true
-disable-content-trust: true
 arches:
   - amd64
