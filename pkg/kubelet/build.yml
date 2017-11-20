@@ -1,6 +1,5 @@
-org: linuxkitprojects
+org: linuxkit
 image: kubelet
 network: true
-disable-content-trust: true
 arches:
   - amd64
