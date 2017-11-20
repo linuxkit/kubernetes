@@ -24,7 +24,6 @@ linuxkit_pkg_build: &linuxkit_pkg_build
           PKG=${CIRCLE_JOB#pkg-}
           mkdir /workspace/images
           linuxkit pkg build pkg/$PKG
-          docker image ls
           linuxkit pkg show-tag pkg/$PKG > /workspace/images/$PKG.tag
           docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
     - persist_to_workspace:
@@ -161,7 +160,6 @@ jobs:
           name: Docker version
           command: |
             docker version
-            docker image ls
       - run:
           name: Import images
           command: |
