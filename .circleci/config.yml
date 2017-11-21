@@ -117,13 +117,7 @@ jobs:
       - run:
           name: Check hashes
           command: |
-            for tag in $(linuxkit pkg show-tag pkg/kubelet) \
-                       $(linuxkit pkg show-tag pkg/cri-containerd) \
-                       $(make --no-print-directory -C pkg/image-cache show-tag-common) \
-                       $(make --no-print-directory -C pkg/image-cache show-tag-control-plane) ; do
-                image=${tag%:*}
-                git grep -E -l "\b$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$image:[[:xdigit:]]"'\{40\}'",$tag,g"
-            done
+            make update-hashes
             if ! git diff --exit-code ; then
                 echo ""
                 echo "*** Hashes are not up to date."
