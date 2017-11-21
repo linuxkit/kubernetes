@@ -24,7 +24,6 @@ linuxkit_pkg_build: &linuxkit_pkg_build
           PKG=${CIRCLE_JOB#pkg-}
           mkdir /workspace/images
           linuxkit pkg build pkg/$PKG
-          docker image ls
           linuxkit pkg show-tag pkg/$PKG > /workspace/images/$PKG.tag
           docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
     - persist_to_workspace:
@@ -79,24 +78,24 @@ jobs:
       - run:
           name: Fetch binaries
           command: |
-            curl -fsSL -o /workspace/bin/linuxkit https://152-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
-            curl -fsSL -o /workspace/bin/moby https://309-89286561-gh.circle-artifacts.com/0/moby-linux
+            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
 
+            echo "Downloaded:"
             sha256sum /workspace/bin/*
+            echo
 
+            echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            ae8355a9bb3cf8197c8c9b1afec1e53622e0e40b2680736bc4f45565c7aea1b9  /workspace/bin/linuxkit
-            eb1df021470bc9f528ae2c55c4a802cb34e8935fa130be90bf9b147a39ec4822  /workspace/bin/moby
+            841425e37f713fcb19cb84a60e42df8a6e09066616eee0f4a00ee87bab7cb6dc  /workspace/bin/linuxkit
             EOF
       - run:
           name: Versions
           command: |
              chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
-             chmod +x /workspace/bin/moby && /workspace/bin/moby version
-             chmod +x /workspace/bin/docker # broken? && /workspace/bin/docker version
+             chmod +x /workspace/bin/docker # docker version deferred until daemon configured in relevant jobs
       - persist_to_workspace:
           root: /workspace
           paths: bin
@@ -118,13 +117,7 @@ jobs:
       - run:
           name: Check hashes
           command: |
-            for tag in $(linuxkit pkg show-tag pkg/kubelet) \
-                       $(linuxkit pkg show-tag pkg/cri-containerd) \
-                       $(make --no-print-directory -C pkg/image-cache show-tag-common) \
-                       $(make --no-print-directory -C pkg/image-cache show-tag-control-plane) ; do
-                image=${tag%:*}
-                git grep -E -l "\b$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$image:[[:xdigit:]]"'\{40\}'",$tag,g"
-            done
+            make update-hashes
             if ! git diff --exit-code ; then
                 echo ""
                 echo "*** Hashes are not up to date."
@@ -161,14 +154,13 @@ jobs:
           name: Docker version
           command: |
             docker version
-            docker image ls
       - run:
           name: Import images
           command: |
-            for pkg in kubelet cri-containerd kubernetes-docker-image-cache-common kubernetes-docker-image-cache-control-plane; do
-               docker image load -i /workspace/images/$pkg.tar
+            for pkg in /workspace/images/*.tar ; do
+               docker image load --input $pkg
             done
-            docker image ls
+            docker image ls --all
 workflows:
   version: 2
   build:
