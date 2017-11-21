@@ -78,7 +78,7 @@ jobs:
       - run:
           name: Fetch binaries
           command: |
-            curl -fsSL -o /workspace/bin/linuxkit https://152-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /workspace/bin/moby https://309-89286561-gh.circle-artifacts.com/0/moby-linux
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
@@ -87,7 +87,7 @@ jobs:
 
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            ae8355a9bb3cf8197c8c9b1afec1e53622e0e40b2680736bc4f45565c7aea1b9  /workspace/bin/linuxkit
+            841425e37f713fcb19cb84a60e42df8a6e09066616eee0f4a00ee87bab7cb6dc  /workspace/bin/linuxkit
             eb1df021470bc9f528ae2c55c4a802cb34e8935fa130be90bf9b147a39ec4822  /workspace/bin/moby
             EOF
       - run:
