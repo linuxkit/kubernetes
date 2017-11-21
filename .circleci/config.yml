@@ -78,9 +78,9 @@ jobs:
       - run:
           name: Fetch binaries
           command: |
-            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
+            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
 
             echo "Downloaded:"
             sha256sum /workspace/bin/*
@@ -94,8 +94,8 @@ jobs:
       - run:
           name: Versions
           command: |
-             chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
              chmod +x /workspace/bin/docker # docker version deferred until daemon configured in relevant jobs
+             chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
       - persist_to_workspace:
           root: /workspace
           paths: bin
