@@ -157,10 +157,10 @@ jobs:
       - run:
           name: Import images
           command: |
-            for pkg in kubelet cri-containerd kubernetes-docker-image-cache-common kubernetes-docker-image-cache-control-plane; do
-               docker image load -i /workspace/images/$pkg.tar
+            for pkg in /workspace/images/*.tar ; do
+               docker image load --input $pkg
             done
-            docker image ls
+            docker image ls --all
 workflows:
   version: 2
   build:
