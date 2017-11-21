@@ -95,7 +95,7 @@ jobs:
           name: Versions
           command: |
              chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
-             chmod +x /workspace/bin/docker # broken? && /workspace/bin/docker version
+             chmod +x /workspace/bin/docker # docker version deferred until daemon configured in relevant jobs
       - persist_to_workspace:
           root: /workspace
           paths: bin
