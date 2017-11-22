@@ -22,13 +22,13 @@ linuxkit_pkg_build: &linuxkit_pkg_build
         name: Building package
         command: |
           PKG=${CIRCLE_JOB#pkg-}
-          mkdir /workspace/images
+          mkdir /workspace/packages
           linuxkit pkg build pkg/$PKG
-          linuxkit pkg show-tag pkg/$PKG > /workspace/images/$PKG.tag
-          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+          linuxkit pkg show-tag pkg/$PKG > /workspace/packages/$PKG.tag
+          docker save -o /workspace/packages/$PKG.tar $(cat /workspace/packages/$PKG.tag)
     - persist_to_workspace:
         root: /workspace
-        paths: images
+        paths: packages
 
 image_cache_build: &image_cache_build
   docker:
@@ -55,13 +55,13 @@ image_cache_build: &image_cache_build
         command: |
           CACHE=${CIRCLE_JOB#pkg-image-cache-}
           PKG=kubernetes-docker-image-cache-$CACHE
-          mkdir /workspace/images
+          mkdir /workspace/packages
           make --no-print-directory -C pkg/image-cache build-$CACHE
-          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/images/$PKG.tag
-          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/packages/$PKG.tag
+          docker save -o /workspace/packages/$PKG.tar $(cat /workspace/packages/$PKG.tag)
     - persist_to_workspace:
         root: /workspace
-        paths: images
+        paths: packages
 
 version: 2
 jobs:
@@ -155,9 +155,9 @@ jobs:
           command: |
             docker version
       - run:
-          name: Import images
+          name: Import packages
           command: |
-            for pkg in /workspace/images/*.tar ; do
+            for pkg in /workspace/packages/*.tar ; do
                docker image load --input $pkg
             done
             docker image ls --all
