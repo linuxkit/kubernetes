@@ -1,5 +1,7 @@
 # Kubernetes and LinuxKit
 
+[![CircleCI](https://circleci.com/gh/linuxkit/kubernetes.svg?style=svg)](https://circleci.com/gh/linuxkit/kubernetes)
+
 This project aims to demonstrate how one can create minimal and immutable Kubernetes OS images with LinuxKit.
 
 ## Build requirements
