@@ -215,7 +215,7 @@ jobs:
       - KUBE_RUNTIME: cri-containerd
       - KUBE_NETWORK: bridge
 
-  pkgs:
+  push-pkgs-to-hub:
     docker:
       - image: debian:stretch
     steps:
@@ -225,7 +225,7 @@ jobs:
       - run:
           name: Install packages
           # ca-certificates are needed for attach_workspace (and git over https)
-          command: apt-get update && apt-get install -y ca-certificates
+          command: apt-get update && apt-get install -y ca-certificates expect git jq openssh-client
       - attach_workspace:
           at: /workspace
       - checkout
@@ -236,12 +236,31 @@ jobs:
           command: |
             docker version
       - run:
-          name: Import packages
+          name: Import packages from workspace
           command: |
             for pkg in /workspace/packages/*.tar ; do
                docker image load --input $pkg
             done
+            echo
             docker image ls --all
+      - run:
+          name: Push packages
+          command: |
+            # PRs from forks do not have access to the necessary secrets to do the push.
+            if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ] ; then
+                echo "DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE not set (likely this is a PR from a fork)."
+                echo "No credentials available, not pushing to hub."
+                exit 0
+            fi
+
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            mkdir -p ~/.docker/trust/private
+            cp .circleci/content-trust.key ~/.docker/trust/private/b056f84873aa0be205dfe826afa6e7458120c9569dd19a2a84154498fb1165d5.key
+
+            linuxkit pkg push --nobuild pkg/cri-containerd
+            linuxkit pkg push --nobuild pkg/kubelet
+            # Omit kubernetes-docker-image-cache-{common,control-plane} until they support linuxkit pkg push.
+
 workflows:
   version: 2
   build:
@@ -287,7 +306,7 @@ workflows:
             - pkg-kubelet
             - pkg-cri-containerd
 
-      - pkgs:
+      - push-pkgs-to-hub:
           # We want everything to have passed, which is a bit
           # tedious. Some of these are already covered transitively,
           # but be more explicit.
