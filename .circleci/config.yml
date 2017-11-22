@@ -67,6 +67,51 @@ image_cache_build: &image_cache_build
         root: /workspace
         paths: packages
 
+image_build: &image_build
+  docker:
+    - image: debian:stretch
+  steps:
+    - run:
+        name: Configure $PATH
+        command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+    - run:
+        name: Install packages
+        # ca-certificates are needed for attach_workspace (and git over https)
+        command: apt-get update && apt-get install -y ca-certificates curl git make openssh-client
+    - attach_workspace:
+        at: /workspace
+    - checkout
+    - setup_remote_docker:
+        version: 17.06.1-ce
+    - run:
+        name: Importing packages from workspace
+        command: |
+          docker image load --input /workspace/packages/kubelet.tar
+          case "$KUBE_RUNTIME" in
+          docker)
+              docker image load --input /workspace/packages/kubernetes-docker-image-cache-common.tar
+              docker image load --input /workspace/packages/kubernetes-docker-image-cache-control-plane.tar
+              ;;
+          cri-containerd)
+              docker image load --input /workspace/packages/cri-containerd.tar
+              ;;
+          *)
+              echo "Unknown $KUBE_RUNTIME"
+              exit 1
+              ;;
+          esac
+          echo
+          docker image ls --all
+    - run:
+        name: Build images
+        command: |
+          mkdir -p /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
+          df -h .
+          # KUBE_FORMATS="iso-efi iso-bios" times out or fails for larger docker images.
+          # Just do tar for now.
+          make KUBE_FORMATS="tar" kube-master.iso kube-node.iso
+          #mv kube-master*.iso kube-node*.iso /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
+
 version: 2
 jobs:
   dependencies:
@@ -144,6 +189,32 @@ jobs:
   pkg-image-cache-control-plane:
     <<: *image_cache_build
 
+  image-docker-weave:
+    <<: *image_build
+    # Needs to be configured/enabled by CircleCI person
+    #resource_class: large
+    environment:
+      - KUBE_RUNTIME: docker
+      - KUBE_NETWORK: weave
+  image-docker-bridge:
+    <<: *image_build
+    # Needs to be configured/enabled by CircleCI person
+    #resource_class: large
+    environment:
+      - KUBE_RUNTIME: docker
+      - KUBE_NETWORK: bridge
+
+  image-cri-containerd-weave:
+    <<: *image_build
+    environment:
+      - KUBE_RUNTIME: cri-containerd
+      - KUBE_NETWORK: weave
+  image-cri-containerd-bridge:
+    <<: *image_build
+    environment:
+      - KUBE_RUNTIME: cri-containerd
+      - KUBE_NETWORK: bridge
+
   pkgs:
     docker:
       - image: debian:stretch
@@ -192,9 +263,41 @@ workflows:
       - pkg-image-cache-control-plane:
           requires:
             - dependencies
-      - pkgs:
+
+      - image-docker-weave:
           requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-image-cache-common
+            - pkg-image-cache-control-plane
+      - image-docker-bridge:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-image-cache-common
+            - pkg-image-cache-control-plane
+      - image-cri-containerd-weave:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-cri-containerd
+      - image-cri-containerd-bridge:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-cri-containerd
+
+      - pkgs:
+          # We want everything to have passed, which is a bit
+          # tedious. Some of these are already covered transitively,
+          # but be more explicit.
+          requires:
+            - check-hashes
             - pkg-kubelet
             - pkg-cri-containerd
             - pkg-image-cache-common
             - pkg-image-cache-control-plane
+            - image-docker-weave
+            - image-docker-bridge
+            - image-cri-containerd-weave
+            - image-cri-containerd-bridge
