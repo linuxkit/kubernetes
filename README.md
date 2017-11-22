@@ -1,17 +1,18 @@
 # Kubernetes and LinuxKit
 
+[![CircleCI](https://circleci.com/gh/linuxkit/kubernetes.svg?style=svg)](https://circleci.com/gh/linuxkit/kubernetes)
+
 This project aims to demonstrate how one can create minimal and immutable Kubernetes OS images with LinuxKit.
 
 ## Build requirements
 
-To build images you will need the [Moby tool](https://github.com/moby/tool), and to rebuild the individual packages you will need the [LinuxKit tool](https://github.com/linuxkit/linuxkit/tree/master/src/cmd/linuxkit)
+To build images and to rebuild the individual packages you will need the [LinuxKit tool](https://github.com/linuxkit/linuxkit/tree/master/src/cmd/linuxkit)
 
-If you already have `go` installed you can use `go get -u github.com/moby/tool/cmd/moby` to install the `moby` build tool, and `go get -u github.com/linuxkit/linuxkit/src/cmd/linuxkit` to install the `linuxkit` tool.
+If you already have `go` installed you can use `go get -u github.com/linuxkit/linuxkit/src/cmd/linuxkit` to install the tool.
 
 On MacOS there is a `brew tap` available. Detailed instructions are at [linuxkit/homebrew-linuxkit](https://github.com/linuxkit/homebrew-linuxkit), the short summary is
 ```
 brew tap linuxkit/linuxkit
-brew install --HEAD moby
 brew install --HEAD linuxkit
 ```
 
