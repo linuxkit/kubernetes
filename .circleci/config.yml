@@ -80,7 +80,7 @@ jobs:
           command: |
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
-            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://206-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
 
             echo "Downloaded:"
             sha256sum /workspace/bin/*
@@ -89,7 +89,7 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            841425e37f713fcb19cb84a60e42df8a6e09066616eee0f4a00ee87bab7cb6dc  /workspace/bin/linuxkit
+            4561e6a19d126d5a4827d7cfff2c6fae2634d9564910df7ef9ff1e89c7e1c4d4  /workspace/bin/linuxkit
             EOF
       - run:
           name: Versions
