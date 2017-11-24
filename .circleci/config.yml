@@ -25,7 +25,9 @@ linuxkit_pkg_build: &linuxkit_pkg_build
           mkdir /workspace/packages
           linuxkit pkg build pkg/$PKG
           linuxkit pkg show-tag pkg/$PKG > /workspace/packages/$PKG.tag
-          docker save -o /workspace/packages/$PKG.tar $(cat /workspace/packages/$PKG.tag)
+          echo
+          docker image ls --all
+          docker image save -o /workspace/packages/$PKG.tar linuxkit/$PKG
     - persist_to_workspace:
         root: /workspace
         paths: packages
@@ -58,7 +60,9 @@ image_cache_build: &image_cache_build
           mkdir /workspace/packages
           make --no-print-directory -C pkg/image-cache build-$CACHE
           make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/packages/$PKG.tag
-          docker save -o /workspace/packages/$PKG.tar $(cat /workspace/packages/$PKG.tag)
+          echo
+          docker image ls --all
+          docker image save -o /workspace/packages/$PKG.tar linuxkit/$PKG
     - persist_to_workspace:
         root: /workspace
         paths: packages
