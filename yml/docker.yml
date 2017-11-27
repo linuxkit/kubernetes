@@ -23,7 +23,7 @@ services:
     runtime:
       mkdir: ["/var/lib/kubeadm", "/var/lib/cni/etc", "/var/lib/cni/opt", "/var/lib/kubelet-plugins"]
   - name: kubernetes-docker-image-cache-common
-    image: linuxkit/kubernetes-docker-image-cache-common:3ca0a9d79ab2a99bd509621bf435ffdfa2f52730
+    image: linuxkit/kubernetes-docker-image-cache-common:dc76dd17fabc18fb035d2c6ca54c656b94a0f489
 files:
   - path: /etc/kubelet.sh.conf
     contents: ""
