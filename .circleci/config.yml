@@ -22,13 +22,15 @@ linuxkit_pkg_build: &linuxkit_pkg_build
         name: Building package
         command: |
           PKG=${CIRCLE_JOB#pkg-}
-          mkdir /workspace/images
+          mkdir /workspace/packages
           linuxkit pkg build pkg/$PKG
-          linuxkit pkg show-tag pkg/$PKG > /workspace/images/$PKG.tag
-          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+          linuxkit pkg show-tag pkg/$PKG > /workspace/packages/$PKG.tag
+          echo
+          docker image ls --all
+          docker image save -o /workspace/packages/$PKG.tar linuxkit/$PKG
     - persist_to_workspace:
         root: /workspace
-        paths: images
+        paths: packages
 
 image_cache_build: &image_cache_build
   docker:
@@ -55,13 +57,60 @@ image_cache_build: &image_cache_build
         command: |
           CACHE=${CIRCLE_JOB#pkg-image-cache-}
           PKG=kubernetes-docker-image-cache-$CACHE
-          mkdir /workspace/images
+          mkdir /workspace/packages
           make --no-print-directory -C pkg/image-cache build-$CACHE
-          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/images/$PKG.tag
-          docker save -o /workspace/images/$PKG.tar $(cat /workspace/images/$PKG.tag)
+          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/packages/$PKG.tag
+          echo
+          docker image ls --all
+          docker image save -o /workspace/packages/$PKG.tar linuxkit/$PKG
     - persist_to_workspace:
         root: /workspace
-        paths: images
+        paths: packages
+
+image_build: &image_build
+  docker:
+    - image: debian:stretch
+  steps:
+    - run:
+        name: Configure $PATH
+        command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
+    - run:
+        name: Install packages
+        # ca-certificates are needed for attach_workspace (and git over https)
+        command: apt-get update && apt-get install -y ca-certificates curl git make openssh-client
+    - attach_workspace:
+        at: /workspace
+    - checkout
+    - setup_remote_docker:
+        version: 17.06.1-ce
+    - run:
+        name: Importing packages from workspace
+        command: |
+          docker image load --input /workspace/packages/kubelet.tar
+          case "$KUBE_RUNTIME" in
+          docker)
+              docker image load --input /workspace/packages/kubernetes-docker-image-cache-common.tar
+              docker image load --input /workspace/packages/kubernetes-docker-image-cache-control-plane.tar
+              ;;
+          cri-containerd)
+              docker image load --input /workspace/packages/cri-containerd.tar
+              ;;
+          *)
+              echo "Unknown $KUBE_RUNTIME"
+              exit 1
+              ;;
+          esac
+          echo
+          docker image ls --all
+    - run:
+        name: Build images
+        command: |
+          mkdir -p /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
+          df -h .
+          # KUBE_FORMATS="iso-efi iso-bios" times out or fails for larger docker images.
+          # Just do tar for now.
+          make KUBE_FORMATS="tar" kube-master.iso kube-node.iso
+          #mv kube-master*.iso kube-node*.iso /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
 
 version: 2
 jobs:
@@ -80,7 +129,9 @@ jobs:
           command: |
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
-            curl -fsSL -o /workspace/bin/linuxkit https://188-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://206-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
+            curl -fsSL -o /workspace/bin/notary https://github.com/theupdateframework/notary/releases/download/v0.4.3/notary-Linux-amd64
 
             echo "Downloaded:"
             sha256sum /workspace/bin/*
@@ -89,13 +140,17 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            841425e37f713fcb19cb84a60e42df8a6e09066616eee0f4a00ee87bab7cb6dc  /workspace/bin/linuxkit
+            4561e6a19d126d5a4827d7cfff2c6fae2634d9564910df7ef9ff1e89c7e1c4d4  /workspace/bin/linuxkit
+            e4ca2ef0015a4be8597d31d9e3e70d88da33924ae72b0999e9f3b79304d4710d  /workspace/bin/manifest-tool
+            06cd02c4c2e7a3b1ad9899b03b3d4dde5392d964c675247d32f604a24661f839  /workspace/bin/notary
             EOF
       - run:
           name: Versions
           command: |
              chmod +x /workspace/bin/docker # docker version deferred until daemon configured in relevant jobs
              chmod +x /workspace/bin/linuxkit && /workspace/bin/linuxkit version
+             chmod +x /workspace/bin/manifest-tool && /workspace/bin/manifest-tool --version
+             chmod +x /workspace/bin/notary && /workspace/bin/notary version
       - persist_to_workspace:
           root: /workspace
           paths: bin
@@ -134,7 +189,33 @@ jobs:
   pkg-image-cache-control-plane:
     <<: *image_cache_build
 
-  pkgs:
+  image-docker-weave:
+    <<: *image_build
+    # Needs to be configured/enabled by CircleCI person
+    #resource_class: large
+    environment:
+      - KUBE_RUNTIME: docker
+      - KUBE_NETWORK: weave
+  image-docker-bridge:
+    <<: *image_build
+    # Needs to be configured/enabled by CircleCI person
+    #resource_class: large
+    environment:
+      - KUBE_RUNTIME: docker
+      - KUBE_NETWORK: bridge
+
+  image-cri-containerd-weave:
+    <<: *image_build
+    environment:
+      - KUBE_RUNTIME: cri-containerd
+      - KUBE_NETWORK: weave
+  image-cri-containerd-bridge:
+    <<: *image_build
+    environment:
+      - KUBE_RUNTIME: cri-containerd
+      - KUBE_NETWORK: bridge
+
+  push-pkgs-to-hub:
     docker:
       - image: debian:stretch
     steps:
@@ -144,7 +225,7 @@ jobs:
       - run:
           name: Install packages
           # ca-certificates are needed for attach_workspace (and git over https)
-          command: apt-get update && apt-get install -y ca-certificates
+          command: apt-get update && apt-get install -y ca-certificates expect git jq openssh-client
       - attach_workspace:
           at: /workspace
       - checkout
@@ -155,12 +236,31 @@ jobs:
           command: |
             docker version
       - run:
-          name: Import images
+          name: Import packages from workspace
           command: |
-            for pkg in /workspace/images/*.tar ; do
+            for pkg in /workspace/packages/*.tar ; do
                docker image load --input $pkg
             done
+            echo
             docker image ls --all
+      - run:
+          name: Push packages
+          command: |
+            # PRs from forks do not have access to the necessary secrets to do the push.
+            if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ] ; then
+                echo "DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE not set (likely this is a PR from a fork)."
+                echo "No credentials available, not pushing to hub."
+                exit 0
+            fi
+
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            mkdir -p ~/.docker/trust/private
+            cp .circleci/content-trust.key ~/.docker/trust/private/b056f84873aa0be205dfe826afa6e7458120c9569dd19a2a84154498fb1165d5.key
+
+            linuxkit pkg push --nobuild pkg/cri-containerd
+            linuxkit pkg push --nobuild pkg/kubelet
+            # Omit kubernetes-docker-image-cache-{common,control-plane} until they support linuxkit pkg push.
+
 workflows:
   version: 2
   build:
@@ -182,9 +282,41 @@ workflows:
       - pkg-image-cache-control-plane:
           requires:
             - dependencies
-      - pkgs:
+
+      - image-docker-weave:
           requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-image-cache-common
+            - pkg-image-cache-control-plane
+      - image-docker-bridge:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-image-cache-common
+            - pkg-image-cache-control-plane
+      - image-cri-containerd-weave:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-cri-containerd
+      - image-cri-containerd-bridge:
+          requires:
+            - dependencies
+            - pkg-kubelet
+            - pkg-cri-containerd
+
+      - push-pkgs-to-hub:
+          # We want everything to have passed, which is a bit
+          # tedious. Some of these are already covered transitively,
+          # but be more explicit.
+          requires:
+            - check-hashes
             - pkg-kubelet
             - pkg-cri-containerd
             - pkg-image-cache-common
             - pkg-image-cache-control-plane
+            - image-docker-weave
+            - image-docker-bridge
+            - image-cri-containerd-weave
+            - image-cri-containerd-bridge

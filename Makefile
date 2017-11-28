@@ -31,7 +31,7 @@ update-hashes:
 	           $$(make --no-print-directory -C pkg/image-cache show-tag-common) \
 	           $$(make --no-print-directory -C pkg/image-cache show-tag-control-plane) ; do \
 	    image=$${tag%:*} ; \
-	    git grep -E -l "\b$$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$$image:[[:xdigit:]]"'\{40\}'",$$tag,g" ; \
+	    git grep -E -l "\b$$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$$tag,g" ; \
 	done
 
 .PHONY: clean
