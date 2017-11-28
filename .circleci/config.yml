@@ -129,7 +129,7 @@ jobs:
           command: |
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
-            curl -fsSL -o /workspace/bin/linuxkit https://206-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://215-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /workspace/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
             curl -fsSL -o /workspace/bin/notary https://github.com/theupdateframework/notary/releases/download/v0.4.3/notary-Linux-amd64
 
@@ -140,7 +140,7 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            4561e6a19d126d5a4827d7cfff2c6fae2634d9564910df7ef9ff1e89c7e1c4d4  /workspace/bin/linuxkit
+            1f39537da2b83fa618cbba110ede937fa7b34577026cf1369d280fd372c8efc1  /workspace/bin/linuxkit
             e4ca2ef0015a4be8597d31d9e3e70d88da33924ae72b0999e9f3b79304d4710d  /workspace/bin/manifest-tool
             06cd02c4c2e7a3b1ad9899b03b3d4dde5392d964c675247d32f604a24661f839  /workspace/bin/notary
             EOF
