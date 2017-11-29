@@ -2,4 +2,5 @@
 kube-*-kernel
 kube-*-cmdline
 kube-*-initrd.img
+kube-*-state
 kube-weave.yaml
