@@ -29,14 +29,19 @@ services:
     image: linuxkit/getty:6af22c32c98536a79230eef000e9abd06b037faa
     env:
      - INSECURE=true
+    cgroupsPath: systemreserved/getty
   - name: rngd
     image: linuxkit/rngd:842e5e8ece7934f0cab9fd0027b595ff3471e5b9
+    cgroupsPath: systemreserved/rngd
   - name: ntpd
     image: linuxkit/openntpd:07a80c3e3e816658318ac027e1253ff9a228b8de
+    cgroupsPath: systemreserved/ntpd
   - name: sshd
     image: linuxkit/sshd:b7f21ef1b13300a994e35eac3644e4f84f0ada8a
+    cgroupsPath: systemreserved/sshd
   - name: kubelet
     image: linuxkit/kubelet:04e7aec28c89d2f408cd8810dd5b752a739f9a63
+    cgroupsPath: podruntime/kubelet
 files:
   - path: etc/linuxkit.yml
     metadata: yaml
