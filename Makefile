@@ -26,10 +26,10 @@ kube-weave.yaml:
 
 .PHONY: update-hashes
 update-hashes:
-	for tag in $$(linuxkit pkg show-tag pkg/kubelet) \
+	set -e ; for tag in $$(linuxkit pkg show-tag pkg/kubelet) \
 	           $$(linuxkit pkg show-tag pkg/cri-containerd) \
-	           $$(make --no-print-directory -C pkg/image-cache show-tag-common) \
-	           $$(make --no-print-directory -C pkg/image-cache show-tag-control-plane) ; do \
+	           $$(linuxkit pkg show-tag pkg/kubernetes-docker-image-cache-common) \
+	           $$(linuxkit pkg show-tag pkg/kubernetes-docker-image-cache-control-plane) ; do \
 	    image=$${tag%:*} ; \
 	    git grep -E -l "\b$$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$$tag,g" ; \
 	done
@@ -39,3 +39,8 @@ clean:
 	rm -f -r \
 	  kube-*-kernel kube-*-cmdline kube-*-state kube-*-initrd.img *.iso \
 	  kube-weave.yaml
+
+.PHONY: refresh-image-caches
+refresh-image-caches:
+	./scripts/mk-image-cache-lst common > pkg/kubernetes-docker-image-cache-common/images.lst
+	./scripts/mk-image-cache-lst control-plane > pkg/kubernetes-docker-image-cache-control-plane/images.lst
