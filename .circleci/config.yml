@@ -32,41 +32,6 @@ linuxkit_pkg_build: &linuxkit_pkg_build
         root: /workspace
         paths: packages
 
-image_cache_build: &image_cache_build
-  docker:
-    - image: debian:stretch
-  steps:
-    - run:
-        name: Configure $PATH
-        command: echo 'export PATH=/workspace/bin:$PATH' >> $BASH_ENV
-    - run:
-        name: Install packages
-        # ca-certificates are needed for attach_workspace (and git over https)
-        command: apt-get update && apt-get install -y ca-certificates git make openssh-client
-    - attach_workspace:
-        at: /workspace
-    - checkout
-    - setup_remote_docker:
-        version: 17.06.1-ce
-    - run:
-        name: Docker version
-        command: |
-          docker version
-    - run:
-        name: Building package
-        command: |
-          CACHE=${CIRCLE_JOB#pkg-image-cache-}
-          PKG=kubernetes-docker-image-cache-$CACHE
-          mkdir /workspace/packages
-          make --no-print-directory -C pkg/image-cache build-$CACHE
-          make --no-print-directory -C pkg/image-cache show-tag-$CACHE > /workspace/packages/$PKG.tag
-          echo
-          docker image ls --all
-          docker image save -o /workspace/packages/$PKG.tar linuxkit/$PKG
-    - persist_to_workspace:
-        root: /workspace
-        paths: packages
-
 image_build: &image_build
   docker:
     - image: debian:stretch
@@ -129,7 +94,7 @@ jobs:
           command: |
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
-            curl -fsSL -o /workspace/bin/linuxkit https://215-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://253-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /workspace/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
             curl -fsSL -o /workspace/bin/notary https://github.com/theupdateframework/notary/releases/download/v0.4.3/notary-Linux-amd64
 
@@ -140,7 +105,7 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            1f39537da2b83fa618cbba110ede937fa7b34577026cf1369d280fd372c8efc1  /workspace/bin/linuxkit
+            200099591f3ee30ffb8915bea2d09995a6fe31bb933ceab0d700f3c1440baba8  /workspace/bin/linuxkit
             e4ca2ef0015a4be8597d31d9e3e70d88da33924ae72b0999e9f3b79304d4710d  /workspace/bin/manifest-tool
             06cd02c4c2e7a3b1ad9899b03b3d4dde5392d964c675247d32f604a24661f839  /workspace/bin/notary
             EOF
@@ -155,7 +120,7 @@ jobs:
           root: /workspace
           paths: bin
 
-  check-hashes:
+  lint:
     docker:
       - image: debian:stretch
     steps:
@@ -168,14 +133,52 @@ jobs:
           command: apt-get update && apt-get install -y ca-certificates git make openssh-client
       - attach_workspace:
           at: /workspace
+      - setup_remote_docker:
+          version: 17.06.1-ce
+      - run:
+          name: Docker version
+          command: |
+            docker version
       - checkout
       - run:
-          name: Check hashes
+          name: Check YML hashes
           command: |
+            # Check yml hashes are up to date.
             make update-hashes
             if ! git diff --exit-code ; then
                 echo ""
                 echo "*** Hashes are not up to date."
+                exit 1
+            fi
+      - run:
+          name: Check image-cache similarity
+          command: |
+            kdicc=pkg/kubernetes-docker-image-cache-common
+            kdiccp=pkg/kubernetes-docker-image-cache-control-plane
+            # Check that the image cache build files have not drifted apart
+            if ! diff $kdicc/Dockerfile $kdiccp/Dockerfile ; then
+                echo ""
+                echo "*** image-cache Dockerfiles do not match."
+                exit 1
+            fi
+            # These differ in one expected way, the name
+            sed -e 's/^image: kubernetes-docker-image-cache-common$/image: kubernetes-docker-image-cache/' <$kdicc/build.yml >$kdicc/build.yml.for-lint
+            sed -e 's/^image: kubernetes-docker-image-cache-control-plane$/image: kubernetes-docker-image-cache/' <$kdiccp/build.yml >$kdiccp/build.yml.for-lint
+            if ! diff $kdicc/build.yml.for-lint $kdiccp/build.yml.for-lint ; then
+                echo ""
+                echo "*** image-cache build.yml files do not match."
+                exit 1
+            fi
+            rm -f $kdicc/build.yml.for-lint $kdiccp/build.yml.for-lint
+      - run:
+          # This one potentially does a lot of docker pull, leave it until last.
+          name: Check image cache images
+          command: |
+            # Check pkg/kubernetes-docker-image-cache-*/image.lst are up to date
+            make refresh-image-caches
+            if ! git diff --exit-code ; then
+                echo ""
+                echo "*** image cache lists are not up to date."
                 exit 1
             fi
 
@@ -184,10 +187,10 @@ jobs:
   pkg-kubelet:
     <<: *linuxkit_pkg_build
 
-  pkg-image-cache-common:
-    <<: *image_cache_build
-  pkg-image-cache-control-plane:
-    <<: *image_cache_build
+  pkg-kubernetes-docker-image-cache-common:
+    <<: *linuxkit_pkg_build
+  pkg-kubernetes-docker-image-cache-control-plane:
+    <<: *linuxkit_pkg_build
 
   image-docker-weave:
     <<: *image_build
@@ -266,7 +269,7 @@ workflows:
   build:
     jobs:
       - dependencies
-      - check-hashes:
+      - lint:
           requires:
             - dependencies
 
@@ -276,10 +279,10 @@ workflows:
       - pkg-cri-containerd:
           requires:
             - dependencies
-      - pkg-image-cache-common:
+      - pkg-kubernetes-docker-image-cache-common:
           requires:
             - dependencies
-      - pkg-image-cache-control-plane:
+      - pkg-kubernetes-docker-image-cache-control-plane:
           requires:
             - dependencies
 
@@ -287,14 +290,14 @@ workflows:
           requires:
             - dependencies
             - pkg-kubelet
-            - pkg-image-cache-common
-            - pkg-image-cache-control-plane
+            - pkg-kubernetes-docker-image-cache-common
+            - pkg-kubernetes-docker-image-cache-control-plane
       - image-docker-bridge:
           requires:
             - dependencies
             - pkg-kubelet
-            - pkg-image-cache-common
-            - pkg-image-cache-control-plane
+            - pkg-kubernetes-docker-image-cache-common
+            - pkg-kubernetes-docker-image-cache-control-plane
       - image-cri-containerd-weave:
           requires:
             - dependencies
@@ -311,11 +314,11 @@ workflows:
           # tedious. Some of these are already covered transitively,
           # but be more explicit.
           requires:
-            - check-hashes
+            - lint
             - pkg-kubelet
             - pkg-cri-containerd
-            - pkg-image-cache-common
-            - pkg-image-cache-control-plane
+            - pkg-kubernetes-docker-image-cache-common
+            - pkg-kubernetes-docker-image-cache-control-plane
             - image-docker-weave
             - image-docker-bridge
             - image-cri-containerd-weave

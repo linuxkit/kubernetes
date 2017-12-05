@@ -1,0 +1,11 @@
+org: linuxkit
+image: kubernetes-docker-image-cache-control-plane
+arches:
+  - amd64
+config:
+  binds:
+    - /var/run:/var/run
+depends:
+  docker-images:
+    target-dir: dl
+    from-file: images.lst

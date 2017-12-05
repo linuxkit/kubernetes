@@ -1,7 +1,0 @@
-org: linuxkit
-image: kubernetes-docker-image-cache-@@CACHE@@
-arches:
-  - amd64
-config:
-  binds:
-    - /var/run:/var/run
