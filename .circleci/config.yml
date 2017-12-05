@@ -262,7 +262,8 @@ jobs:
 
             linuxkit pkg push --nobuild pkg/cri-containerd
             linuxkit pkg push --nobuild pkg/kubelet
-            # Omit kubernetes-docker-image-cache-{common,control-plane} until they support linuxkit pkg push.
+            linuxkit pkg push --nobuild pkg/kubernetes-docker-image-cache-common
+            linuxkit pkg push --nobuild pkg/kubernetes-docker-image-cache-control-plane
 
 workflows:
   version: 2
