@@ -58,7 +58,7 @@ image_build: &image_build
               # Retag to avoid content trust for unpushed images
               local tag=$(cat /workspace/packages/${pkg}.tag)
               docker image tag ${tag} linuxkitcircleci/${pkg}:ci
-              sed -i -e "s,${tag},linuxkitcircleci/${pkg}:ci,g" yml/*.yml
+              sed -i -e "s,image: ${tag}$,image: linuxkitcircleci/${pkg}:ci,g" yml/*.yml
           }
 
           load kubelet
@@ -78,7 +78,7 @@ image_build: &image_build
           echo
           docker image ls --all
           echo
-          git diff
+          git --no-pager diff
     - run:
         name: Build images
         command: |
