@@ -54,6 +54,11 @@ image_build: &image_build
           load() {
               local pkg=$1
               docker image load --input /workspace/packages/${pkg}.tar
+
+              # Retag to avoid content trust for unpushed images
+              local tag=$(cat /workspace/packages/${pkg}.tag)
+              docker image tag ${tag} linuxkitcircleci/${pkg}:ci
+              sed -i -e "s,${tag},linuxkitcircleci/${pkg}:ci,g" yml/*.yml
           }
 
           load kubelet
@@ -72,6 +77,8 @@ image_build: &image_build
           esac
           echo
           docker image ls --all
+          echo
+          git diff
     - run:
         name: Build images
         command: |
