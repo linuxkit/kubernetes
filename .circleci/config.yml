@@ -86,7 +86,7 @@ image_build: &image_build
           df -h .
           # KUBE_FORMATS="iso-efi iso-bios" times out or fails for larger docker images.
           # Just do tar for now.
-          make KUBE_FORMATS="tar" kube-master.iso kube-node.iso
+          make KUBE_FORMATS="tar" master node
           #mv kube-master*.iso kube-node*.iso /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
 
 version: 2
