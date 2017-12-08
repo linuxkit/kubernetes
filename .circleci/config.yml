@@ -51,14 +51,24 @@ image_build: &image_build
     - run:
         name: Importing packages from workspace
         command: |
-          docker image load --input /workspace/packages/kubelet.tar
+          load() {
+              local pkg=$1
+              docker image load --input /workspace/packages/${pkg}.tar
+
+              # Retag to avoid content trust for unpushed images
+              local tag=$(cat /workspace/packages/${pkg}.tag)
+              docker image tag ${tag} linuxkitcircleci/${pkg}:ci
+              sed -i -e "s,image: ${tag}$,image: linuxkitcircleci/${pkg}:ci,g" yml/*.yml
+          }
+
+          load kubelet
           case "$KUBE_RUNTIME" in
           docker)
-              docker image load --input /workspace/packages/kubernetes-docker-image-cache-common.tar
-              docker image load --input /workspace/packages/kubernetes-docker-image-cache-control-plane.tar
+              load kubernetes-docker-image-cache-common
+              load kubernetes-docker-image-cache-control-plane
               ;;
           cri-containerd)
-              docker image load --input /workspace/packages/cri-containerd.tar
+              load cri-containerd
               ;;
           *)
               echo "Unknown $KUBE_RUNTIME"
@@ -67,6 +77,8 @@ image_build: &image_build
           esac
           echo
           docker image ls --all
+          echo
+          git --no-pager diff
     - run:
         name: Build images
         command: |
