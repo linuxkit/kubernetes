@@ -1,7 +1,7 @@
 KUBE_RUNTIME ?= docker
 KUBE_NETWORK ?= weave
 
-KUBE_NETWORK_WEAVE ?= v2.0.5
+KUBE_NETWORK_WEAVE ?= v2.1.3
 
 ifeq ($(shell uname -s),Darwin)
 KUBE_FORMATS ?= iso-efi
