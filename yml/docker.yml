@@ -1,6 +1,6 @@
 services:
   - name: docker
-    image: docker:17.10.0-ce-dind
+    image: docker:17.11.0-ce-dind
     capabilities:
      - all
     pid: host
@@ -23,7 +23,7 @@ services:
     runtime:
       mkdir: ["/var/lib/kubeadm", "/var/lib/cni/etc", "/var/lib/cni/opt", "/var/lib/kubelet-plugins"]
   - name: kubernetes-docker-image-cache-common
-    image: linuxkit/kubernetes-docker-image-cache-common:f7416397346370cdc3e8dbe6348d504e1273d8c7
+    image: linuxkit/kubernetes-docker-image-cache-common:c83c9b98eaf010aff2b30e531ad393b1543fb3e9
 files:
   - path: /etc/kubelet.sh.conf
     contents: ""
