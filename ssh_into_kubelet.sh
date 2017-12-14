@@ -3,7 +3,8 @@
 sshopts="-o LogLevel=FATAL \
 	 -o StrictHostKeyChecking=no \
 	 -o UserKnownHostsFile=/dev/null \
-	 -o IdentitiesOnly=yes"
+	 -o IdentitiesOnly=yes \
+	 ${SSHOPTS:-}"
 
 case $(uname -s) in
     Linux)
@@ -15,4 +16,4 @@ case $(uname -s) in
 	    ijc25/alpine-ssh"
 	;;
 esac
-$ssh $sshopts -t root@"$1" ctr tasks exec --tty --exec-id ssh-$(hostname)-$$ kubelet ash -l
+exec $ssh $sshopts -t root@"$1" ctr tasks exec --tty --exec-id ssh-$(hostname)-$$ kubelet ash -l
