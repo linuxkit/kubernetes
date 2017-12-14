@@ -34,6 +34,20 @@ RUN set -e; \
 
 RUN make WHAT="cmd/kubelet cmd/kubectl cmd/kubeadm"
 
+ENV CNI_URL https://github.com/containernetworking/plugins
+#ENV CNI_BRANCH pull/NNN/head
+ENV CNI_COMMIT ${cni_version}
+RUN mkdir -p $GOPATH/github.com/containernetworking/ && \
+    cd $GOPATH/github.com/containernetworking/ && \
+    git clone $CNI_URL plugins
+WORKDIR $GOPATH/github.com/containernetworking/plugins
+RUN set -e;  \
+    if [ -n "$CNI_BRANCH" ] ; then \
+        git fetch origin "CNI_BRANCH"; \
+    fi; \
+    git checkout $CNI_COMMIT
+RUN ./build.sh
+
 RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
 #coreutils needed for du -B for disk image checks made by kubelet
 # example: $ du -s -B 1 /var/lib/kubelet/pods/...
@@ -55,16 +69,16 @@ RUN apk add --no-cache --initdb -p /out \
     util-linux \
     && true
 
-RUN cp _output/bin/kubelet /out/usr/bin/kubelet
-RUN cp _output/bin/kubeadm /out/usr/bin/kubeadm
-RUN cp _output/bin/kubectl /out/usr/bin/kubectl
+RUN cp $GOPATH/src/github.com/kubernetes/kubernetes/_output/bin/kubelet /out/usr/bin/kubelet
+RUN cp $GOPATH/src/github.com/kubernetes/kubernetes/_output/bin/kubeadm /out/usr/bin/kubeadm
+RUN cp $GOPATH/src/github.com/kubernetes/kubernetes/_output/bin/kubectl /out/usr/bin/kubectl
+
+RUN tar -czf /out/root/cni.tgz -C $GOPATH/github.com/containernetworking/plugins/bin .
 
 # Remove apk residuals. We have a read-only rootfs, so apk is of no use.
 RUN rm -rf /out/etc/apk /out/lib/apk /out/var/cache
 
 RUN rmdir /out/var/run && ln -nfs /run /out/var/run
-
-RUN curl -fSL -o /out/root/cni.tgz https://github.com/containernetworking/plugins/releases/download/${cni_version}/cni-plugins-amd64-${cni_version}.tgz
 
 ADD kubelet.sh /out/usr/bin/kubelet.sh
 ADD kubeadm-init.sh /kubeadm-init.sh
