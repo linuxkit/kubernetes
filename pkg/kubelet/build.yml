@@ -15,6 +15,7 @@ config:
   - /etc/kubeadm:/etc/kubeadm
   - /var/lib/kubelet-plugins:/usr/libexec/kubernetes/kubelet-plugins:rshared,rbind
   - /var/lib/cni/conf:/etc/cni/net.d:rshared,rbind
+  - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
   mounts:
   - type: cgroup
     options:
@@ -31,12 +32,12 @@ config:
     mkdir:
     - /var/lib/kubeadm
     - /var/lib/cni/conf
-    - /var/lib/cni/opt
+    - /var/lib/cni/bin
     - /var/lib/kubelet-plugins
     mounts:
     - type: bind
-      source: /var/lib/cni/opt
-      destination: /opt/cni
+      source: /var/lib/cni/bin
+      destination: /opt/cni/bin
       options:
       - rw
       - bind
