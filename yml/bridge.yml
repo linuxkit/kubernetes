@@ -15,7 +15,7 @@ onboot:
               "type": "bridge",
               "bridge": "cni0",
               "isDefaultGateway": true,
-              "ipMasq": false,
+              "ipMasq": true,
               "hairpinMode": true,
               "ipam": {
                 "type": "host-local",
