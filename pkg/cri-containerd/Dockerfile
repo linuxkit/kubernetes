@@ -47,5 +47,5 @@ RUN make DESTDIR=/out install
 
 FROM scratch
 WORKDIR /
-ENTRYPOINT ["cri-containerd", "-v", "2", "--alsologtostderr", "--network-bin-dir", "/var/lib/cni/opt/bin", "--network-conf-dir", "/var/lib/cni/etc/net.d"]
+ENTRYPOINT ["cri-containerd", "-v", "2", "--alsologtostderr", "--network-bin-dir", "/var/lib/cni/opt/bin", "--network-conf-dir", "/var/lib/cni/conf"]
 COPY --from=build /out /

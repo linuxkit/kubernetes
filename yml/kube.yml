@@ -53,7 +53,7 @@ files:
     contents: 'net.ipv4.ip_forward = 1'
   - path: /opt/cni
     directory: true
-  - path: /etc/cni
+  - path: /etc/cni/net.d
     directory: true
   - path: root/.ssh/authorized_keys
     source: ~/.ssh/id_rsa.pub
