@@ -39,12 +39,12 @@ elif [ -d /var/config/kubeadm ] ; then
 	kubeadm-init.sh --skip-token-print $(cat /var/config/kubeadm/init) &
     elif [ -e /var/config/kubeadm/join ] ; then
 	echo "kubelet.sh: joining cluster with metadata \"$(cat /var/config/kubeadm/join)\""
-	kubeadm join --skip-preflight-checks $(cat /var/config/kubeadm/join)
+	kubeadm join --ignore-preflight-errors=all $(cat /var/config/kubeadm/join)
 	await=/etc/kubernetes/bootstrap-kubelet.conf
     fi
 elif [ -e /var/config/userdata ] ; then
     echo "kubelet.sh: joining cluster with metadata \"$(cat /var/config/userdata)\""
-    kubeadm join --skip-preflight-checks $(cat /var/config/userdata)
+    kubeadm join --ignore-preflight-errors=all $(cat /var/config/userdata)
     await=/etc/kubernetes/bootstrap-kubelet.conf
 fi
 
