@@ -6,9 +6,9 @@ if [ -f /etc/kubeadm/kubeadm.yaml ]; then
     if [ $# -ne 0 ] ; then
         echo WARNING: Ignoring command line options: $@
     fi
-    kubeadm init --skip-preflight-checks --config /etc/kubeadm/kubeadm.yaml
+    kubeadm init --ignore-preflight-errors=all --config /etc/kubeadm/kubeadm.yaml
 else
-    kubeadm init --skip-preflight-checks --kubernetes-version @KUBERNETES_VERSION@ $@
+    kubeadm init --ignore-preflight-errors=all --kubernetes-version @KUBERNETES_VERSION@ $@
 fi
 
 # sorting by basename relies on the dirnames having the same number of directories
