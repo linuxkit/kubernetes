@@ -10,7 +10,6 @@ RUN \
   libseccomp-dev \
   linux-headers \
   make \
-  socat \
   && true
 ENV GOPATH=/go PATH=$PATH:/go/bin
 
@@ -39,6 +38,7 @@ RUN apk add --no-cache --initdb -p /out \
     ca-certificates \
     iptables \
     util-linux \
+    socat \
     && true
 # Remove apk residuals. We have a read-only rootfs, so apk is of no use.
 RUN rm -rf /out/etc/apk /out/lib/apk /out/var/cache
