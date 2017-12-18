@@ -194,9 +194,11 @@ jobs:
                 exit 1
             fi
 
+  pkg-kubelet:
+    <<: *linuxkit_pkg_build
   pkg-cri-containerd:
     <<: *linuxkit_pkg_build
-  pkg-kubelet:
+  pkg-kube-e2e-test:
     <<: *linuxkit_pkg_build
 
   pkg-kubernetes-docker-image-cache-common:
@@ -272,8 +274,9 @@ jobs:
             mkdir -p ~/.docker/trust/private
             cp .circleci/content-trust.key ~/.docker/trust/private/b056f84873aa0be205dfe826afa6e7458120c9569dd19a2a84154498fb1165d5.key
 
-            linuxkit pkg push --nobuild pkg/cri-containerd
             linuxkit pkg push --nobuild pkg/kubelet
+            linuxkit pkg push --nobuild pkg/cri-containerd
+            linuxkit pkg push --nobuild pkg/kube-e2e-test
             linuxkit pkg push --nobuild pkg/kubernetes-docker-image-cache-common
             linuxkit pkg push --nobuild pkg/kubernetes-docker-image-cache-control-plane
 
@@ -290,6 +293,9 @@ workflows:
           requires:
             - dependencies
       - pkg-cri-containerd:
+          requires:
+            - dependencies
+      - pkg-kube-e2e-test:
           requires:
             - dependencies
       - pkg-kubernetes-docker-image-cache-common:
@@ -330,6 +336,7 @@ workflows:
             - lint
             - pkg-kubelet
             - pkg-cri-containerd
+            - pkg-kube-e2e-test
             - pkg-kubernetes-docker-image-cache-common
             - pkg-kubernetes-docker-image-cache-control-plane
             - image-docker-weave

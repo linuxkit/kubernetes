@@ -1,0 +1,19 @@
+# most tests generate `kubeconfig` on the fly, but some depend on `-host`,
+# so we must provide `-kubeconfig` and `-host` flags until that changes
+apiVersion: v1
+kind: Config
+clusters:
+  - name: kube-e2e-test-cluster
+    cluster:
+      server: https://kubernetes.default.svc:443
+      certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+users:
+  - name: kube-e2e-test-user
+    user:
+      tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+contexts:
+  - name: kube-e2e-test-context
+    context:
+      cluster: kube-e2e-test-cluster
+      user: kube-e2e-test-user
+current-context: kube-e2e-test-context
