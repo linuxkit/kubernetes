@@ -87,7 +87,6 @@ RUN apk add --no-cache --initdb -p /out \
     ethtool \
     iproute2 \
     iptables \
-    libc6-compat \
     musl \
     openssl \
     socat \
