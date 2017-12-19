@@ -6,7 +6,7 @@ onboot:
       - "-c"
       - |
         set -ex
-        cat <<EOF >/var/lib/cni/etc/net.d/10-default.conflist
+        cat <<EOF >/var/lib/cni/conf/10-default.conflist
         {
           "cniVersion": "0.3.1",
           "name": "default",
@@ -36,13 +36,13 @@ onboot:
           ]
         }
         EOF
-        cat <<EOF >/var/lib/cni/etc/net.d/99-loopback.conf
+        cat <<EOF >/var/lib/cni/conf/99-loopback.conf
         {
           "cniVersion": "0.2.0",
           "type": "loopback"
         }
         EOF
     runtime:
-      mkdir: ["/var/lib/cni/etc/net.d"]
+      mkdir: ["/var/lib/cni/conf"]
     binds:
       - /var/lib:/var/lib

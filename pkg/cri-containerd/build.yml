@@ -11,8 +11,8 @@ config:
   - /tmp:/tmp
   - /var:/var:rshared,rbind
   - /var/lib/kubeadm:/etc/kubernetes
-  - /var/lib/cni/etc:/etc/cni:rshared,rbind
-  - /var/lib/cni/opt:/opt/cni:rshared,rbind
+  - /var/lib/cni/conf:/etc/cni/net.d:rshared,rbind
+  - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
   - /run/containerd/containerd.sock:/run/containerd/containerd.sock
   - /var/lib/kubelet-plugins:/usr/libexec/kubernetes/kubelet-plugins:rshared,rbind
   mounts:
@@ -30,6 +30,6 @@ config:
   runtime:
     mkdir:
     - /var/lib/kubeadm
-    - /var/lib/cni/etc/net.d
-    - /var/lib/cni/opt
+    - /var/lib/cni/conf
+    - /var/lib/cni/bin
     - /var/lib/kubelet-plugins

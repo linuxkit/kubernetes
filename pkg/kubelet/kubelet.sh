@@ -16,14 +16,14 @@ if [ -n "$KUBELET_DISABLED" ] ; then
 fi
 
 if [ ! -e /var/lib/cni/.opt.defaults-extracted ] ; then
-    mkdir -p /var/lib/cni/opt/bin
-    tar -xzf /root/cni.tgz -C /var/lib/cni/opt/bin
+    mkdir -p /var/lib/cni/bin
+    tar -xzf /root/cni.tgz -C /var/lib/cni/bin
     touch /var/lib/cni/.opt.defaults-extracted
 fi
 
-if [ ! -e /var/lib/cni/.cni.configs-extracted ] && [ -d /var/config/cni/etc/net.d ] ; then
-    mkdir -p /var/lib/cni/etc/net.d
-    cp /var/config/cni/etc/net.d/* /var/lib/cni/etc/net.d/
+if [ ! -e /var/lib/cni/.cni.conf-extracted ] && [ -d /var/config/cni ] ; then
+    mkdir -p /var/lib/cni/conf
+    cp /var/config/cni/* /var/lib/cni/conf/
     touch /var/lib/cni/.cni.configs-extracted
 fi
 
@@ -72,7 +72,7 @@ exec kubelet --kubeconfig=/etc/kubernetes/kubelet.conf \
 	      --cgroups-per-qos=false \
 	      --enforce-node-allocatable= \
 	      --network-plugin=cni \
-	      --cni-conf-dir=/var/lib/cni/etc/net.d \
-	      --cni-bin-dir=/var/lib/cni/opt/bin \
+	      --cni-conf-dir=/etc/cni/net.d \
+	      --cni-bin-dir=/opt/cni/bin \
 	      --cadvisor-port=0 \
 	      $KUBELET_ARGS $@

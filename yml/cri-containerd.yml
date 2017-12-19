@@ -1,6 +1,6 @@
 services:
   - name: cri-containerd
-    image: linuxkit/cri-containerd:0a91a4e43787a89c0d4824ea71072e56a29bb833
+    image: linuxkit/cri-containerd:c4146c2fc5a91b6c46b7417305a958a0199f06af
     cgroupsPath: podruntime/runtime
 files:
   - path: /etc/kubelet.sh.conf
