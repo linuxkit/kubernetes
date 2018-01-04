@@ -74,9 +74,9 @@ To boot a node use:
 
 More specifically, to start 3 nodes use 3 separate shells and run this:
 ```
-shell1> ./boot.sh 1 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443
-shell2> ./boot.sh 2 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443
-shell3> ./boot.sh 3 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443
+shell1> ./boot.sh 1 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443 --discovery-token-unsafe-skip-ca-verification
+shell2> ./boot.sh 2 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443 --discovery-token-unsafe-skip-ca-verification
+shell3> ./boot.sh 3 --token bb38c6.117e66eabbbce07d 192.168.65.22:6443 --discovery-token-unsafe-skip-ca-verification
 ```
 
 ## Platform specific information
