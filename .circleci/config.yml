@@ -83,11 +83,9 @@ image_build: &image_build
         name: Build images
         command: |
           mkdir -p /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
-          df -h .
-          # KUBE_FORMATS="iso-efi iso-bios" times out or fails for larger docker images.
-          # Just do tar for now.
+          # KUBE_FORMATS="iso-efi iso-bios" are much slower (especially for RUNTIME=docker) to build than tar.
+          # So for now just build tar files.
           make KUBE_FORMATS="tar" master node
-          #mv kube-master*.iso kube-node*.iso /workspace/images/kube-$KUBE_RUNTIME-$KUBE_NETWORK
 
 version: 2
 jobs:
@@ -106,7 +104,7 @@ jobs:
           command: |
             curl -fsSL -o /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
-            curl -fsSL -o /workspace/bin/linuxkit https://253-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://362-46932243-gh.circle-artifacts.com/0/linuxkit-linux-amd64
             curl -fsSL -o /workspace/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
             curl -fsSL -o /workspace/bin/notary https://github.com/theupdateframework/notary/releases/download/v0.4.3/notary-Linux-amd64
 
@@ -117,7 +115,7 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             6af40e74b2dbb2927882acab52d50bfc72551779d541957fc70b6adc325ee5ef  /workspace/bin/docker
-            200099591f3ee30ffb8915bea2d09995a6fe31bb933ceab0d700f3c1440baba8  /workspace/bin/linuxkit
+            b61188823c2491e9a1c16d275e41c68d5736f3f10577d01cb358261ff71bbad6  /workspace/bin/linuxkit
             e4ca2ef0015a4be8597d31d9e3e70d88da33924ae72b0999e9f3b79304d4710d  /workspace/bin/manifest-tool
             06cd02c4c2e7a3b1ad9899b03b3d4dde5392d964c675247d32f604a24661f839  /workspace/bin/notary
             EOF
