@@ -1,21 +1,23 @@
 #!/bin/sh
 repo=gcr.io/google_containers
-kube_version=v1.9.0
+# When changing kubernetes_version remember to also update:
+# - pkg/kubelet/Dockerfile
+kubernetes_version=v1.9.0
 kube_dns_version=1.14.7
 pause_version=3.0
 etcd_version=3.1.10
 
 common="
-	kube-proxy-amd64:$kube_version
+	kube-proxy-amd64:$kubernetes_version
 	k8s-dns-sidecar-amd64:$kube_dns_version
 	k8s-dns-kube-dns-amd64:$kube_dns_version
 	k8s-dns-dnsmasq-nanny-amd64:$kube_dns_version
 	pause-amd64:$pause_version"
 
 control="
-	kube-apiserver-amd64:$kube_version
-	kube-controller-manager-amd64:$kube_version
-	kube-scheduler-amd64:$kube_version
+	kube-apiserver-amd64:$kubernetes_version
+	kube-controller-manager-amd64:$kubernetes_version
+	kube-scheduler-amd64:$kubernetes_version
 	etcd-amd64:$etcd_version"
 
 oi() {
