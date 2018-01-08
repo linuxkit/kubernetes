@@ -36,7 +36,7 @@ RUN set -e; \
     if [ -n "$KUBERNETES_BRANCH" ] ; then \
         git fetch origin "$KUBERNETES_BRANCH"; \
     fi; \
-    git checkout $KUBERNETES_COMMIT
+    git checkout -q $KUBERNETES_COMMIT
 
 RUN make WHAT="cmd/kubelet cmd/kubectl cmd/kubeadm"
 
@@ -53,7 +53,7 @@ RUN set -e;  \
     if [ -n "$CNI_BRANCH" ] ; then \
         git fetch origin "CNI_BRANCH"; \
     fi; \
-    git checkout $CNI_COMMIT
+    git checkout -q $CNI_COMMIT
 RUN ./build.sh
 
 ### critools
@@ -69,7 +69,7 @@ RUN set -e;  \
     if [ -n "$CRITOOLS_BRANCH" ] ; then \
         git fetch origin "CRITOOLS_BRANCH"; \
     fi; \
-    git checkout $CRITOOLS_COMMIT
+    git checkout -q $CRITOOLS_COMMIT
 RUN make binaries
 
 ## Construct final image
