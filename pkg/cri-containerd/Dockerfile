@@ -24,7 +24,7 @@ RUN set -e; \
     if [ -n "$CRI_CONTAINERD_BRANCH" ] ; then \
         git fetch origin "$CRI_CONTAINERD_BRANCH"; \
     fi; \
-    git checkout $CRI_CONTAINERD_COMMIT
+    git checkout -q $CRI_CONTAINERD_COMMIT
 RUN make static-binaries BUILD_TAGS="seccomp"
 
 RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
