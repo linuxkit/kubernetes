@@ -23,7 +23,7 @@ control="
 oi() {
 	local i="$1"
 	digest=$(docker image inspect --format '{{index .RepoDigests 0}}' "$repo/$i")
-	echo "gcr.io/google_containers/${i}@${digest#*@}"
+	echo "$repo/${i}@${digest#*@}"
 }
 
 if [ $# -ne 1 ] ; then
