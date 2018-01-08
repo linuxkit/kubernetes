@@ -1,0 +1,5 @@
+org: linuxkit
+image: kube-e2e-test
+network: true
+arches:
+  - amd64
