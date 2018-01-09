@@ -27,6 +27,22 @@ for i in $tdir/lk/pkg/* ; do
     sed -i -e "s,$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$tag,g" yml/*.yml
 done
 
+# Kernel doesn't use `linuxkit pkg` and uses a different
+# tagging strategy, so we do it manually by extracting the
+# "recommended" one from the toplevel linuxkit.yml
+# example.
+# TODO: add a target to kernel/Makefile which will show
+# the recommended kernel.
+tag=$(sed -n -e 's,^\s*image: \(linuxkit/kernel:.\+\)\s*,\1,p' $tdir/lk/linuxkit.yml)
+if [ ! -n "$tag" ] ; then
+    echo "Failed to extract kernel tag" >&2
+    exit 1
+fi
+# Not update_hash since the tag is not a hash in this case
+
+echo "Updating to $tag"
+sed -i -e "s,linuxkit/kernel:.\+,$tag,g" yml/*.yml
+
 # We manually construct the S-o-b because -F strips the trailing blank
 # lines, meaning that with -s there is no blank between the "Commit:
 # ..." and the S-o-b.
