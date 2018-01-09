@@ -1,4 +1,4 @@
-FROM linuxkit/alpine:07f7d136e427dc68154cd5edbb2b9576f9ac5213 AS build
+FROM linuxkit/alpine:4584958639b2378246371fe219f33b270667e22e AS build
 
 RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
 RUN apk add --no-cache --initdb -p /out \
@@ -7,8 +7,6 @@ RUN apk add --no-cache --initdb -p /out \
 
 # Remove apk residuals. We have a read-only rootfs, so apk is of no use.
 RUN rm -rf /out/etc/apk /out/lib/apk /out/var/cache
-
-RUN rmdir /out/var/run && ln -nfs /run /out/var/run
 
 FROM scratch
 WORKDIR /

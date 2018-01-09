@@ -16,4 +16,4 @@ case $(uname -s) in
 	    ijc25/alpine-ssh"
 	;;
 esac
-exec $ssh $sshopts -t root@"$1" ctr tasks exec --tty --exec-id ssh-$(hostname)-$$ kubelet ash -l
+exec $ssh $sshopts -t root@"$1" ctr --namespace services.linuxkit tasks exec --tty --exec-id ssh-$(hostname)-$$ kubelet ash -l
