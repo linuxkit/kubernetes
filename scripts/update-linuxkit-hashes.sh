@@ -10,6 +10,28 @@ git clone $lkurl $tdir/lk
 
 lkrev=$(git -C $tdir/lk show --oneline -s HEAD)
 
+update_hash() {
+    local tag=$1; shift
+    echo "Updating to $tag"
+
+    image=${tag%:*}
+    sed -i -e "s,$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$tag,g" $@
+}
+
+# First update alpine build bases
+
+# Alpine base image does not use linuxkit pkg, grab the tag from versions.x86_64 instead.
+if [ ! -f "$tdir/lk/tools/alpine/versions.x86_64" ] ; then
+    echo "tools/alpine lacks versions.x86_64 file" >&2
+    exit 1
+fi
+tag=$(sed -n -e '1s,^\# \(linuxkit/alpine:[[:xdigit:]]\{40\}\)-amd64$,\1,p' $tdir/lk/tools/alpine/versions.x86_64)
+if [ ! -n "$tag" ] ; then
+    echo "Failed to extract tools/alpine tag" >&2
+    exit 1
+fi
+update_hash $tag pkg/*/Dockerfile
+
 for i in $tdir/lk/pkg/* ; do
     if [ ! -d "$i" ] ; then
 	continue
@@ -21,10 +43,7 @@ for i in $tdir/lk/pkg/* ; do
     fi
 
     tag=$(linuxkit pkg show-tag "$i")
-    echo "Updating to $tag"
-
-    image=${tag%:*}
-    sed -i -e "s,$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$tag,g" yml/*.yml
+    update_hash "$tag" yml/*.yml
 done
 
 # Kernel doesn't use `linuxkit pkg` and uses a different
@@ -57,4 +76,10 @@ Commit: $lkrev
 Signed-off-by: $uname <$email>
 EOF
 
-git commit --only -F $tdir/commit-msg yml/*.yml
+git commit --only -F $tdir/commit-msg yml/*.yml pkg/*/Dockerfile
+
+# Now update for the result of changes to pkg/*/Dockerfile, this is
+# defered until now so we get the new hash instead of the old hash
+# with a -dirty suffix.
+make update-hashes
+git commit --amend --only --no-edit yml/*.yml
