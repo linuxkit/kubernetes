@@ -1,4 +1,4 @@
-FROM linuxkit/alpine:07f7d136e427dc68154cd5edbb2b9576f9ac5213 AS build
+FROM linuxkit/alpine:4584958639b2378246371fe219f33b270667e22e AS build
 
 RUN \
   apk add \
@@ -15,7 +15,7 @@ ENV GOPATH=/go PATH=$PATH:/go/bin
 
 ENV CRI_CONTAINERD_URL https://github.com/kubernetes-incubator/cri-containerd.git
 #ENV CRI_CONTAINERD_BRANCH pull/NNN/head
-ENV CRI_CONTAINERD_COMMIT v1.0.0-beta.0
+ENV CRI_CONTAINERD_COMMIT v1.0.0-beta.1
 RUN mkdir -p $GOPATH/src/github.com/kubernetes-incubator && \
     cd $GOPATH/src/github.com/kubernetes-incubator && \
     git clone $CRI_CONTAINERD_URL cri-containerd
