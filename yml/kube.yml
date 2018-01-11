@@ -42,10 +42,6 @@ services:
   - name: kubelet
     image: linuxkit/kubelet:0e6902fbb878f592b8be03605e18d917e622ce31
     cgroupsPath: podruntime/kubelet
-    runtime:
-      cgroups:
-        - systemreserved
-        - podruntime
 files:
   - path: etc/linuxkit.yml
     metadata: yaml

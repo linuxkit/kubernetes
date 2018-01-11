@@ -26,6 +26,9 @@ config:
   rootfsPropagation: shared
   pid: host
   runtime:
+    cgroups:
+    - systemreserved
+    - podruntime
     mkdir:
     - /var/lib/kubeadm
     - /var/lib/cni/conf
