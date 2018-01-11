@@ -18,12 +18,7 @@ config:
   - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
   mounts:
   - type: cgroup
-    options:
-    - rw
-    - nosuid
-    - noexec
-    - nodev
-    - relatime
+    options: ["rw","nosuid","noexec","nodev","relatime"]
   capabilities:
   - all
   rootfsPropagation: shared
@@ -38,12 +33,8 @@ config:
     - type: bind
       source: /var/lib/cni/bin
       destination: /opt/cni/bin
-      options:
-      - rw
-      - bind
+      options: ["rw","bind"]
     - type: bind
       source: /var/lib/cni/conf
       destination: /etc/cni/net.d
-      options:
-      - rw
-      - bind
+      options: ["rw","bind"]

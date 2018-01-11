@@ -17,12 +17,7 @@ config:
   - /var/lib/kubelet-plugins:/usr/libexec/kubernetes/kubelet-plugins:rshared,rbind
   mounts:
   - type: cgroup
-    options:
-    - rw
-    - nosuid
-    - noexec
-    - nodev
-    - relatime
+    options: ["rw","nosuid","noexec","nodev","relatime"]
   capabilities:
   - all
   rootfsPropagation: shared
