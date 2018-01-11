@@ -29,6 +29,7 @@ config:
     cgroups:
     - systemreserved
     - podruntime
+    - kubepods
     mkdir:
     - /var/lib/kubeadm
     - /var/lib/cni/conf
