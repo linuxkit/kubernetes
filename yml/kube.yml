@@ -1,8 +1,8 @@
 kernel:
-  image: linuxkit/kernel:4.9.75
+  image: linuxkit/kernel:4.9.76
   cmdline: "console=tty0 console=ttyS0"
 init:
-  - linuxkit/init:26def2174c74efa0ea8006ebd63ebb5d02e9513e
+  - linuxkit/init:6992bd1308bdfd8af5a74aba293bb53e99b482bd
   - linuxkit/runc:abc3f292653e64a2fd488e9675ace19a55ec7023
   - linuxkit/containerd:e58a382c33bb509ba3e0e8170dfaa5a100504c5b
   - linuxkit/ca-certificates:de21b84d9b055ad9dcecc57965b654a7a24ef8e0
@@ -20,7 +20,7 @@ onboot:
   - name: metadata
     image: linuxkit/metadata:2af15c9f4b0e73515c219b7cc14e6e65e1d4fd6d
   - name: format
-    image: linuxkit/format:e945016ec780a788a71dcddc81497d54d3b14bc7
+    image: linuxkit/format:5a1140cb65e733f26de727fa684fef1326e9d5ab
   - name: mounts
     image: linuxkit/mount:b346ec277b7074e5c9986128a879c10a1d18742b
     command: ["/usr/bin/mountie", "/var/lib/"]
@@ -40,12 +40,8 @@ services:
     image: linuxkit/sshd:ac5e8364e2e9aa8717a3295c51eb60b8c57373d5
     cgroupsPath: systemreserved/sshd
   - name: kubelet
-    image: linuxkit/kubelet:0e6902fbb878f592b8be03605e18d917e622ce31
+    image: linuxkit/kubelet:bf10112fabce0f713ea1eea2a8798d350b25fe98
     cgroupsPath: podruntime/kubelet
-    runtime:
-      cgroups:
-        - systemreserved
-        - podruntime
 files:
   - path: etc/linuxkit.yml
     metadata: yaml

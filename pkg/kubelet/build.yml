@@ -17,18 +17,19 @@ config:
   - /var/lib/cni/conf:/etc/cni/net.d:rshared,rbind
   - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
   mounts:
-  - type: cgroup
-    options:
-    - rw
-    - nosuid
-    - noexec
-    - nodev
-    - relatime
+  - type: bind
+    source: /sys/fs/cgroup
+    destination: /sys/fs/cgroup
+    options: ["rw","rbind","rshared","nosuid","noexec","nodev","relatime"]
   capabilities:
   - all
   rootfsPropagation: shared
   pid: host
   runtime:
+    cgroups:
+    - systemreserved
+    - podruntime
+    - kubepods
     mkdir:
     - /var/lib/kubeadm
     - /var/lib/cni/conf
@@ -38,12 +39,8 @@ config:
     - type: bind
       source: /var/lib/cni/bin
       destination: /opt/cni/bin
-      options:
-      - rw
-      - bind
+      options: ["rw","bind"]
     - type: bind
       source: /var/lib/cni/conf
       destination: /etc/cni/net.d
-      options:
-      - rw
-      - bind
+      options: ["rw","bind"]

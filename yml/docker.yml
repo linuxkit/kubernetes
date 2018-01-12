@@ -5,8 +5,10 @@ services:
      - all
     pid: host
     mounts:
-     - type: cgroup
-       options: ["rw","nosuid","noexec","nodev","relatime"]
+     - type: bind
+       source: /sys/fs/cgroup
+       destination: /sys/fs/cgroup
+       options: ["rw","rbind","rshared","nosuid","noexec","nodev","relatime"]
     binds:
      - /dev:/dev
      - /etc/resolv.conf:/etc/resolv.conf
