@@ -88,4 +88,4 @@ if [ -n "${kubeadm_data}" ] ; then
     echo "{  \"kubeadm\": { \"entries\": { ${kubeadm_data} } } }" > $state/metadata.json
 fi
 
-exec linuxkit run ${KUBE_RUN_ARGS} -networking ${KUBE_NETWORKING} -cpus ${KUBE_VCPUS} -mem ${KUBE_MEM} -state "${state}" -disk size=${KUBE_DISK} -data $state/metadata.json ${uefi} "${img}${suffix}"
+exec linuxkit run ${KUBE_RUN_ARGS} -networking ${KUBE_NETWORKING} -cpus ${KUBE_VCPUS} -mem ${KUBE_MEM} -state "${state}" -disk size=${KUBE_DISK} -data-file $state/metadata.json ${uefi} "${img}${suffix}"
