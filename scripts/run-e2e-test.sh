@@ -111,7 +111,7 @@ items:
           restartPolicy: Never
           containers:
             - name: "${name}"
-              image: "linuxkit/${name}:34e10483df2d291365bfec0f6c81d3dfadaf7279"
+              image: "linuxkit/${name}:7de947038b081a788905018f4cef4ad971c08c7a"
               imagePullPolicy: IfNotPresent
               env:
               - name: E2E_CLOUD_PROVIDER
