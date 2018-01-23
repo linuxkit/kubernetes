@@ -3,7 +3,7 @@ FROM linuxkit/alpine:4584958639b2378246371fe219f33b270667e22e AS build
 # When changing kubernetes_version remember to also update:
 # - scripts/mk-image-cache-lst and run `make refresh-image-caches` from top-level
 # - pkg/kubelet/Dockerfile
-ENV kubernetes_version v1.9.1
+ENV kubernetes_version v1.9.2
 
 RUN apk add -U --no-cache \
   bash \
