@@ -1,4 +1,4 @@
 services:
   - name: kubernetes-docker-image-cache-control-plane
-    image: linuxkit/kubernetes-docker-image-cache-control-plane:a51d847bbf199c0b6e775ad44ab4f2b6e5ea318c
+    image: linuxkit/kubernetes-docker-image-cache-control-plane:003bc342571352ecdf16f720f841cc923b2e32f0
     cgroupsPath: podruntime/control-cache

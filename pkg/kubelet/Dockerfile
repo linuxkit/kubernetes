@@ -1,4 +1,4 @@
-FROM linuxkit/alpine:4584958639b2378246371fe219f33b270667e22e AS build
+FROM linuxkit/alpine:cba395fbc278daee841106801aba1e1bd7e0f2f7 AS build
 
 # When changing kubernetes_version remember to also update:
 # - scripts/mk-image-cache-lst and run `make refresh-image-caches` from top-level
