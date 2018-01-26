@@ -20,6 +20,7 @@ case $# in
 esac
 
 lkrev=$(git -C $tdir/lk show --oneline -s HEAD)
+lktag=$(git -C $tdir/lk tag -l --points-at HEAD)
 
 update_hash() {
     local tag=$1; shift
@@ -68,6 +69,10 @@ if [ ! -n "$tag" ] ; then
     echo "Failed to extract kernel tag" >&2
     exit 1
 fi
+tagmsg=""
+if [ -n "$lktag" ] ; then
+    tagmsg=$(printf "\nTag: %s" $lktag)
+fi
 # Not update_hash since the tag is not a hash in this case
 
 echo "Updating to $tag"
@@ -82,7 +87,7 @@ email=$(git config --get user.email)
 cat >$tdir/commit-msg <<EOF
 Updated hashes from https://github.com/linuxkit/linuxkit
 
-Commit: $lkrev
+Commit: $lkrev$tagmsg
 
 Signed-off-by: $uname <$email>
 EOF
