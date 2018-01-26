@@ -8,6 +8,17 @@ trap 'if [ -d "$tdir" ] ; then rm -rf $tdir; fi' EXIT
 
 git clone $lkurl $tdir/lk
 
+case $# in
+    0) ;;
+    1)
+	git -C $tdir/lk reset --hard $1
+	;;
+    *)
+	echo "Invalid arguments" >&2
+	exit 1
+	;;
+esac
+
 lkrev=$(git -C $tdir/lk show --oneline -s HEAD)
 
 update_hash() {
