@@ -32,7 +32,7 @@ update-hashes:
 	           $$(linuxkit pkg show-tag pkg/kubernetes-docker-image-cache-common) \
 	           $$(linuxkit pkg show-tag pkg/kubernetes-docker-image-cache-control-plane) ; do \
 	    image=$${tag%:*} ; \
-	    git grep -E -l "\b$$image:" | xargs --no-run-if-empty sed -i.bak -e "s,$$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$$tag,g" ; \
+	    sed -i.bak -e "s,$$image:[[:xdigit:]]\{40\}\(-dirty\)\?,$$tag,g" yml/*.yml ; \
 	done
 
 .PHONY: clean
