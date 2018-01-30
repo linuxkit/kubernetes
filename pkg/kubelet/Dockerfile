@@ -92,6 +92,7 @@ RUN apk add --no-cache --initdb -p /out \
     openssl \
     socat \
     util-linux \
+    nfs-utils \
     && true
 
 RUN cp $GOPATH/src/github.com/kubernetes/kubernetes/_output/bin/kubelet /out/usr/bin/kubelet
