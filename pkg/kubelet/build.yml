@@ -35,6 +35,7 @@ config:
     - /var/lib/cni/conf
     - /var/lib/cni/bin
     - /var/lib/kubelet-plugins
+    - /var/lib/nfs/statd/sm
     mounts:
     - type: bind
       source: /var/lib/cni/bin
