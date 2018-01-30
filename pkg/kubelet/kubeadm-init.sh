@@ -12,7 +12,7 @@ else
 fi
 
 # sorting by basename relies on the dirnames having the same number of directories
-YAML=$(ls -1 /var/config/kube-system.init/*.yaml /etc/kubeadm/kube-system.init/*.yaml 2>/dev/null | sort --field-separator=/ --key=5)
+YAML=$(ls -1 /run/config/kube-system.init/*.yaml /etc/kubeadm/kube-system.init/*.yaml 2>/dev/null | sort --field-separator=/ --key=5)
 for i in ${YAML}; do
     n=$(basename "$i")
     if [ -e "$i" ] ; then
@@ -29,7 +29,7 @@ for i in ${YAML}; do
 	fi
     fi
 done
-if [ -f /var/config/kubeadm/untaint-master ] ; then
+if [ -f /run/config/kubeadm/untaint-master ] ; then
     echo "Removing \"node-role.kubernetes.io/master\" taint from all nodes"
     kubectl taint nodes --all node-role.kubernetes.io/master-
 fi
