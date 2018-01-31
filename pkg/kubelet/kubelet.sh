@@ -6,8 +6,8 @@ if [ -e /etc/kubelet.sh.conf ] ; then
     . /etc/kubelet.sh.conf
 fi
 
-if [ -f /var/config/kubelet/disabled ] ; then
-    echo "kubelet.sh: /var/config/kubelet/disabled file is present, exiting"
+if [ -f /run/config/kubelet/disabled ] ; then
+    echo "kubelet.sh: /run/config/kubelet/disabled file is present, exiting"
     exit 0
 fi
 if [ -n "$KUBELET_DISABLED" ] ; then
@@ -21,9 +21,9 @@ if [ ! -e /var/lib/cni/.opt.defaults-extracted ] ; then
     touch /var/lib/cni/.opt.defaults-extracted
 fi
 
-if [ ! -e /var/lib/cni/.cni.conf-extracted ] && [ -d /var/config/cni ] ; then
+if [ ! -e /var/lib/cni/.cni.conf-extracted ] && [ -d /run/config/cni ] ; then
     mkdir -p /var/lib/cni/conf
-    cp /var/config/cni/* /var/lib/cni/conf/
+    cp /run/config/cni/* /var/lib/cni/conf/
     touch /var/lib/cni/.cni.configs-extracted
 fi
 
@@ -31,20 +31,20 @@ await=/etc/kubernetes/kubelet.conf
 
 if [ -f "/etc/kubernetes/kubelet.conf" ] ; then
     echo "kubelet.sh: kubelet already configured"
-elif [ -d /var/config/kubeadm ] ; then
-    if [ -f /var/config/kubeadm/init ] ; then
-	echo "kubelet.sh: init cluster with metadata \"$(cat /var/config/kubeadm/init)\""
+elif [ -d /run/config/kubeadm ] ; then
+    if [ -f /run/config/kubeadm/init ] ; then
+	echo "kubelet.sh: init cluster with metadata \"$(cat /run/config/kubeadm/init)\""
 	# This needs to be in the background since it waits for kubelet to start.
 	# We skip printing the token so it is not persisted in the log.
-	kubeadm-init.sh --skip-token-print $(cat /var/config/kubeadm/init) &
-    elif [ -e /var/config/kubeadm/join ] ; then
-	echo "kubelet.sh: joining cluster with metadata \"$(cat /var/config/kubeadm/join)\""
-	kubeadm join --ignore-preflight-errors=all $(cat /var/config/kubeadm/join)
+	kubeadm-init.sh --skip-token-print $(cat /run/config/kubeadm/init) &
+    elif [ -e /run/config/kubeadm/join ] ; then
+	echo "kubelet.sh: joining cluster with metadata \"$(cat /run/config/kubeadm/join)\""
+	kubeadm join --ignore-preflight-errors=all $(cat /run/config/kubeadm/join)
 	await=/etc/kubernetes/bootstrap-kubelet.conf
     fi
-elif [ -e /var/config/userdata ] ; then
-    echo "kubelet.sh: joining cluster with metadata \"$(cat /var/config/userdata)\""
-    kubeadm join --ignore-preflight-errors=all $(cat /var/config/userdata)
+elif [ -e /run/config/userdata ] ; then
+    echo "kubelet.sh: joining cluster with metadata \"$(cat /run/config/userdata)\""
+    kubeadm join --ignore-preflight-errors=all $(cat /run/config/userdata)
     await=/etc/kubernetes/bootstrap-kubelet.conf
 fi
 

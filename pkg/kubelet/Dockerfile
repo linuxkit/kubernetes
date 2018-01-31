@@ -86,6 +86,7 @@ RUN apk add --no-cache --initdb -p /out \
     curl \
     ebtables \
     ethtool \
+    findutils \
     iproute2 \
     iptables \
     musl \
