@@ -1,0 +1,70 @@
+files:
+  - path: containers/services/kubelet/lower/root/app.yaml
+    contents: |
+      apiVersion: extensions/v1beta1
+      kind: Deployment
+      metadata:
+        name: nginx
+        labels:
+          name: nginx
+        namespace: default
+      spec:
+        replicas: 1
+        template:
+          metadata:
+            labels:
+              name: nginx
+          spec:
+            containers:
+            - name: nginx
+              image: nginx:alpine
+              ports:
+              - name: www
+                containerPort: 80
+              volumeMounts:
+              - mountPath: /tmp
+                name: tmp-volume
+            volumes:
+              - name: tmp-volume
+                emptyDir:
+                  medium: Memory
+            nodeSelector:
+              beta.kubernetes.io/os: linux
+      ---
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx
+        labels:
+          name: nginx
+        namespace: default
+      spec:
+        type: NodePort
+        ports:
+          # the port that this service should serve on
+        - port: 80
+          targetPort: 80
+          nodePort: 30002
+        selector:
+          name: nginx
+      ---
+      apiVersion: extensions/v1beta1
+      kind: Deployment
+      metadata:
+        name: alpine
+        labels:
+          name: alpine
+        namespace: default
+      spec:
+        replicas: 1
+        template:
+          metadata:
+            labels:
+              name: alpine
+          spec:
+            containers:
+            - name: alpine
+              image: alpine:3.7
+              command: ["/bin/sh", "-c", "while : ; do sleep 1h ; done"]
+            nodeSelector:
+              beta.kubernetes.io/os: linux
