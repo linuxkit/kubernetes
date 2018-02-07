@@ -1,0 +1,211 @@
+#!/usr/bin/env expect
+
+set con_prompt "(ns: getty) linuxkit-*:*# "
+set ssh_prompt "linuxkit-*:*# "
+set timeout 120
+
+set bootexec [lindex $argv 0]
+set sshexec [lindex $argv 1]
+
+proc kill args {
+    foreach what $args {
+	global $what
+	if [info exists $what] {
+	    upvar #0 $what sid
+	    set pid [exp_pid -i $sid]
+	    puts "killing $what ($sid) = $pid"
+	    exec kill $pid
+	    close $sid
+	} else {
+	    puts "not killing $what (not started)"
+	}
+    }
+}
+
+proc boot_linuxkit {} {
+    global lk_sid bootexec
+    spawn env {KUBE_RUN_ARGS=-publish 2222:22} KUBE_MEM=3584 KUBE_VCPUS=2 KUBE_DISK=8G KUBE_CLEAR_STATE=y KUBE_MASTER_UNTAINT=y $bootexec
+    set lk_sid $spawn_id
+    puts "INFO lk ($lk_sid) is pid [exp_pid -i $lk_sid]"
+}
+
+proc ssh_into_kubelet {} {
+    global ssh_sid sshexec
+
+    set sshopts {-p 2222 -o ConnectTimeout=5 -o LogLevel=DEBUG}
+    if [info exists ::env(SSHOPTS)] {
+	set sshopts [concat $::env(SSHOPTS) $sshopts]
+    }
+    spawn env SSHOPTS=$sshopts $sshexec localhost
+    set ssh_sid $spawn_id
+    puts "INFO ssh ($ssh_sid) is pid [exp_pid -i $ssh_sid]"
+}
+
+proc await_prompt {sidvar promptvar step} {
+    upvar #0 $sidvar sid $promptvar prompt
+    expect -i $sid \
+	$prompt {
+	    puts "SUCCESS $step"
+	} timeout {
+	    puts "FAIL $step (timeout)"
+	    kill ssh_sid lk_sid
+	    exit 1
+	} eof {
+	    puts "FAIL $step (eof)"
+	    kill ssh_sid lk_sid
+	    exit 1
+	}
+}
+
+proc send_concmd {s} {
+    global lk_sid
+    send -i $lk_sid "$s\n"
+}
+
+proc await_con_prompt {step} {
+    global lk_sid con_prompt
+    await_prompt lk_sid con_prompt $step
+}
+
+proc concmd {step cmd} {
+    send_concmd $cmd
+    await_con_prompt $step
+}
+
+proc send_sshcmd {s} {
+    global ssh_sid
+    send -i $ssh_sid "$s\n"
+}
+
+proc await_ssh_prompt {step} {
+    global ssh_sid ssh_prompt
+    await_prompt ssh_sid ssh_prompt $step
+}
+
+proc sshcmd {step cmd} {
+    send_sshcmd $cmd
+    await_ssh_prompt $step
+}
+
+# Run $cmd at 1s intervals until we get $want or timeout
+# $sidvar names a variable containing sid to send/receive on
+# $promptvar names a variable containing the expected prompt
+# $step is used for logging
+proc await_cmd_output {sidvar promptvar step cmd want} {
+    upvar #0 $sidvar sid $promptvar prompt
+    send -i $sid "$cmd\n"
+    set retries 0
+    expect -i $sid -timeout 300 \
+    $want {
+	puts "SUCCESS $step: $cmd => $want"
+    } $prompt {
+	set retries [expr $retries + 1]
+	sleep 1
+	send -i $sid "$cmd\n"
+	exp_continue -continue_timer
+    } timeout {
+	puts "FAIL $step (timeout)"
+	kill ssh_sid lk_sid
+	exit 1
+    }
+    await_prompt $sidvar $promptvar "$step (after $retries attempts)"
+}
+
+proc await_sshcmd_output {step cmd want} {
+    global ssh_sid ssh_prompt
+    await_cmd_output ssh_sid ssh_prompt $step $cmd $want
+}
+
+boot_linuxkit
+
+await_con_prompt "boot"
+
+concmd "ifconfig" "ifconfig eth0"
+concmd "list containers" "ctr -n services.linuxkit container ls"
+
+set retries 0
+ssh_into_kubelet
+# provide ssh_sid as an indirect, allowing ssh to be respawned, which
+# changes the id, we need this in case ssh cannot immediately connect.
+expect -i ssh_sid \
+    $ssh_prompt {
+	puts "SUCCESS connected to ssh (after $retries attempts)"
+    } "read: Connection reset by peer" {
+	# ssh happened too soon, wait a bit.
+	set retries [expr $retries + 1]
+	#puts "RETRY:$retries ssh (conn reset)"
+	wait -i $ssh_sid
+	sleep 1
+	ssh_into_kubelet
+	exp_continue -continue_timer
+    } eof {
+	set retries [expr $retries + 1]
+	#puts "RETRY:$retries ssh (eof)"
+	wait -i $ssh_sid
+	sleep 1
+	ssh_into_kubelet
+	exp_continue -continue_timer
+    } timeout {
+	puts "FAIL ssh (timeout)"
+	kill ssh_sid lk_sid
+	exit 1
+    }
+
+puts "RUN kubeadm-init.sh"
+send_sshcmd "kubeadm-init.sh"
+
+# Written as N*5m with logging to avoid "10 mins with no output" from CI
+set retries 0
+set maxretries 10
+expect -i $ssh_sid -timeout 300 \
+    "Your Kubernetes master has initialized successfully!" {
+	puts "SUCCESS cluster initialised!"
+    } $ssh_prompt {
+	puts "FAIL kubeadm-init.sh (returned to prompt)"
+	kill ssh_sid lk_sid
+	exit 1
+    } timeout {
+	set retries [expr $retries + 1]
+	if [expr $retries < $maxretries] {
+	    #puts "RETRY:$retries kubeadm-init.sh (timeout)"
+	    exp_continue
+	}
+	puts "FAIL kubeadm-init.sh (timeout)"
+	kill ssh_sid lk_sid
+	exit 1
+    } eof {
+	puts "FAIL kubeadm-init.sh (eof)"
+	kill ssh_sid lk_sid
+	exit 1
+    }
+await_ssh_prompt "kubeadm-init.sh"
+
+sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-system get -o wide pods"
+
+await_sshcmd_output "await node ready" \
+    {kubectl get nodes -o jsonpath='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}' ; echo} \
+    "Ready=True"
+
+await_sshcmd_output "await kube-dns ready" \
+    {kubectl --namespace=kube-system get --selector='k8s-app'='kube-dns' -o jsonpath='{.items[*].status.phase}' pods ; echo} \
+    "Running"
+await_sshcmd_output "await etcd ready" \
+    {kubectl --namespace=kube-system get --selector='component'='etcd' -o jsonpath='{.items[*].status.phase}' pods ; echo} \
+    "Running"
+
+sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-system get -o wide pods"
+
+kill ssh_sid
+
+puts "RUN poweroff -f"
+send_concmd "poweroff -f"
+
+expect -i $lk_sid \
+    "Power down" {
+	puts "SUCCESS poweroff"
+    } eof {
+	puts "SUCCESS poweroff"
+    } timeout {
+	puts "FAILED poweroff (timeout)"
+	exit 1
+    }

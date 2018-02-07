@@ -13,6 +13,7 @@ fi
 
 clean_up() {
 	rm -f kube-master.iso
+	rm -rf kube-master-state
 }
 
 trap clean_up EXIT
@@ -22,5 +23,7 @@ export KUBE_NETWORK=$network
 export LINUXKIT_BUILD_ARGS="--disable-content-trust"
 export KUBE_BASENAME="`pwd`/kube-"
 make -C ${RT_PROJECT_ROOT}/../../ master
+
+../test.exp ${RT_PROJECT_ROOT}/../../boot.sh ${RT_PROJECT_ROOT}/../../ssh_into_kubelet.sh
 
 exit 0
