@@ -36,3 +36,12 @@ config:
     - /var/lib/cni/bin
     - /var/lib/kubelet-plugins
     - /var/lib/nfs/statd/sm
+    mounts:
+    - type: bind
+      source: /var/lib/cni/bin
+      destination: /opt/cni/bin
+      options: ["rw","bind"]
+    - type: bind
+      source: /var/lib/cni/conf
+      destination: /etc/cni/net.d
+      options: ["rw","bind"]
