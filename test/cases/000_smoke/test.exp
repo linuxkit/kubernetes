@@ -24,7 +24,7 @@ proc kill args {
 
 proc boot_linuxkit {} {
     global lk_sid bootexec
-    spawn env {KUBE_RUN_ARGS=-publish 2222:22} KUBE_MEM=3584 KUBE_VCPUS=2 KUBE_DISK=8G KUBE_CLEAR_STATE=y KUBE_MASTER_UNTAINT=y $bootexec
+    spawn env {KUBE_RUN_ARGS=-publish 2222:22 -publish 30002:30002} KUBE_MEM=3584 KUBE_VCPUS=2 KUBE_DISK=8G KUBE_CLEAR_STATE=y KUBE_MASTER_UNTAINT=y $bootexec
     set lk_sid $spawn_id
     puts "INFO lk ($lk_sid) is pid [exp_pid -i $lk_sid]"
 }
@@ -194,6 +194,24 @@ await_sshcmd_output "await etcd ready" \
     "Running"
 
 sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-system get -o wide pods"
+
+sshcmd "apply app.yaml" "kubectl apply -f /root/app.yaml"
+
+await_sshcmd_output "await nginx pod ready" \
+    {kubectl get pods --selector=name=nginx -o jsonpath='{.items[*].status.phase}' ; echo} \
+    "Running"
+puts "SUCCESS application pod ready"
+
+sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-system get -o wide pods ; echo ; kubectl --namespace=default get -o wide pods"
+
+set curl [exec curl -sS http://localhost:30002]
+if [string match "Welcome to nginx!" $curl] {
+    puts "FAIL nginx returned:"
+    puts $curl
+    kill ssh_sid lk_sid
+    exit 1
+}
+puts "SUCCESS nginx responded well"
 
 kill ssh_sid
 

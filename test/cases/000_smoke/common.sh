@@ -22,6 +22,7 @@ export KUBE_RUNTIME=$runtime
 export KUBE_NETWORK=$network
 export LINUXKIT_BUILD_ARGS="--disable-content-trust"
 export KUBE_BASENAME="`pwd`/kube-"
+export KUBE_EXTRA_YML="`pwd`/../test.yml"
 make -C ${RT_PROJECT_ROOT}/../../ master
 
 ../test.exp ${RT_PROJECT_ROOT}/../../boot.sh ${RT_PROJECT_ROOT}/../../ssh_into_kubelet.sh
