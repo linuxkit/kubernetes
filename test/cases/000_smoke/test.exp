@@ -197,10 +197,13 @@ sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-sys
 
 sshcmd "apply app.yaml" "kubectl apply -f /root/app.yaml"
 
+await_sshcmd_output "await alpine pod ready" \
+    {kubectl get pods --selector=name=alpine -o jsonpath='{.items[*].status.phase}' ; echo} \
+    "Running"
 await_sshcmd_output "await nginx pod ready" \
     {kubectl get pods --selector=name=nginx -o jsonpath='{.items[*].status.phase}' ; echo} \
     "Running"
-puts "SUCCESS application pod ready"
+puts "SUCCESS application pods ready"
 
 sshcmd "status" "kubectl get -o wide nodes ; echo ; kubectl --namespace=kube-system get -o wide pods ; echo ; kubectl --namespace=default get -o wide pods"
 
@@ -212,6 +215,25 @@ if [string match "Welcome to nginx!" $curl] {
     exit 1
 }
 puts "SUCCESS nginx responded well"
+
+send_sshcmd {kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- wget -q -O - http://nginx/}
+expect -i $ssh_sid -timeout 10 \
+    "Welcome to nginx!" {
+	puts "SUCCESS intra-pod networking ok"
+    } $ssh_prompt {
+	puts "FAIL intra-pod networking (returned to prompt)"
+	kill ssh_sid lk_sid
+	exit 1
+    } timeout {
+	puts "FAIL intra-pod networking (timeout)"
+	kill ssh_sid lk_sid
+	exit 1
+    } eof {
+	puts "FAIL intra-pod networking (eof)"
+	kill ssh_sid lk_sid
+	exit 1
+    }
+await_ssh_prompt "intra-pod networking"
 
 kill ssh_sid
 
