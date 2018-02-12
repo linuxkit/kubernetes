@@ -6,9 +6,18 @@ onboot:
       - "-c"
       - |
         set -e
-        subnet='"10.1.0.0/16"'
-        gateway='"10.1.0.1"'
-        ns='"10.1.0.1"'
+        field() {
+            local f=$1
+            local d=$2
+            if [ -r "/run/config/cni.bridge/$f" ] ; then
+                cat "/run/config/cni.bridge/$f"
+            else
+                echo -e "\"$d\"\\n"
+            fi
+        }
+        subnet="$(field subnet '10.1.0.0/16')"
+        gateway="$(field gateway '10.1.0.1')"
+        ns="$(field ns '10.1.0.1')"
         cat <<EOF >/var/lib/cni/conf/10-default.conflist
         {
           "cniVersion": "0.3.1",
