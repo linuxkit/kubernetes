@@ -6,6 +6,9 @@ onboot:
       - "-c"
       - |
         set -ex
+        subnet='"10.1.0.0/16"'
+        gateway='"10.1.0.1"'
+        ns='"10.1.0.1"'
         cat <<EOF >/var/lib/cni/conf/10-default.conflist
         {
           "cniVersion": "0.3.1",
@@ -19,11 +22,11 @@ onboot:
               "hairpinMode": true,
               "ipam": {
                 "type": "host-local",
-                "subnet": "10.1.0.0/16",
-                "gateway": "10.1.0.1"
+                "subnet": $subnet,
+                "gateway": $gateway
               },
               "dns": {
-                "nameservers": ["10.1.0.1"]
+                "nameservers": [$ns]
               }
             },
             {
