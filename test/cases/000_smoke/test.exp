@@ -216,8 +216,15 @@ if [string match "Welcome to nginx!" $curl] {
 }
 puts "SUCCESS nginx responded well"
 
-send_sshcmd {kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- wget -q -O - http://nginx/}
-expect -i $ssh_sid -timeout 10 \
+# This also happens to test external connectivity...
+sshcmd "alpine install curl" {kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- apk add --update curl}
+
+# We rely on the expect -timeout to kill the infinite curl loop. The
+# loop is needed because it seems it sometimes takes the internal DNS
+# a while to settle, resulting in spurious `curl: (6) Could not
+# resolve host: nginx` failures.
+send_sshcmd {while ! kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- curl -sS http://nginx/ ; do sleep 1s ; done}
+expect -i $ssh_sid -timeout 60 \
     "Welcome to nginx!" {
 	puts "SUCCESS intra-pod networking ok"
     } $ssh_prompt {
