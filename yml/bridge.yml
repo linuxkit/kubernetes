@@ -5,7 +5,7 @@ onboot:
       - "/bin/sh"
       - "-c"
       - |
-        set -ex
+        set -e
         subnet='"10.1.0.0/16"'
         gateway='"10.1.0.1"'
         ns='"10.1.0.1"'
@@ -45,7 +45,11 @@ onboot:
           "type": "loopback"
         }
         EOF
+        if [ -r "/run/config/cni.bridge/debug-show-configs" ] ; then
+            grep . /var/lib/cni/conf/*.conf /var/lib/cni/conf/*.conflist
+        fi
     runtime:
       mkdir: ["/var/lib/cni/conf"]
     binds:
       - /var/lib:/var/lib
+      - /run/config:/run/config
