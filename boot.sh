@@ -17,6 +17,8 @@ set -e
 : ${KUBE_MAC:=}
 : ${KUBE_CLEAR_STATE:=}
 
+: ${KUBE_METADATA:=} # Without the outermost braces {}.
+
 [ "$(uname -s)" = "Darwin" ] && KUBE_EFI=1
 
 suffix=".iso"
@@ -84,6 +86,9 @@ fi
 
 mkdir -p "${state}"
 touch $state/metadata.json
+if [ -n "${KUBE_METADATA}" ] ; then
+    metadata="${metadata:+$metadata, }${KUBE_METADATA}"
+fi
 if [ -n "${kubeadm_data}" ] ; then
     metadata="${metadata:+$metadata, }\"kubeadm\": { \"entries\": { ${kubeadm_data} } }"
 fi
