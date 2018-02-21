@@ -4,7 +4,7 @@ FROM linuxkit/alpine:cba395fbc278daee841106801aba1e1bd7e0f2f7 AS build
 # - scripts/mk-image-cache-lst and run `make refresh-image-caches` from top-level
 # - pkg/e2e-test/Dockerfile
 ENV kubernetes_version v1.9.2
-ENV cni_version        v0.6.0
+ENV cni_version        v0.7.0
 ENV critools_version   v1.0.0-alpha.0
 
 RUN apk add -U --no-cache \
