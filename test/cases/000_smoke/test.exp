@@ -216,6 +216,11 @@ if [string match "Welcome to nginx!" $curl] {
 }
 puts "SUCCESS nginx responded well"
 
+sshcmd "cat cni config" {grep . /var/lib/cni/conf/*.conf /var/lib/cni/conf/*.conflist}
+sshcmd "host ifconfig" {ifconfig -a && route -n && echo && grep . /etc/resolv.conf}
+sshcmd "nginx ifconfig" {kubectl exec $(kubectl get pods -l name==nginx -o=jsonpath='{.items[*].metadata.name}') -- sh -c 'ifconfig -a && route -n && echo && grep . /etc/resolv.conf'}
+sshcmd "alpine ifconfig" {kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- sh -c 'ifconfig -a && route -n && echo && grep . /etc/resolv.conf'}
+
 # This also happens to test external connectivity...
 sshcmd "alpine install curl" {kubectl exec $(kubectl get pods -l name==alpine -o=jsonpath='{.items[*].metadata.name}') -- apk add --update curl}
 

@@ -17,6 +17,8 @@ set -e
 : ${KUBE_MAC:=}
 : ${KUBE_CLEAR_STATE:=}
 
+: ${KUBE_METADATA:=} # Without the outermost braces {}.
+
 [ "$(uname -s)" = "Darwin" ] && KUBE_EFI=1
 
 suffix=".iso"
@@ -28,10 +30,10 @@ if [ $# -eq 0 ] ; then
     # then we configure for auto init. If it is completely unset then
     # we do not.
     if [ -n "${KUBE_MASTER_AUTOINIT+x}" ] ; then
-	kubeadm_data="${kubeadm_data+$kubeadm_data, }\"init\": { \"content\": \"${KUBE_MASTER_AUTOINIT}\" }"
+	kubeadm_data="${kubeadm_data:+$kubeadm_data, }\"init\": { \"content\": \"${KUBE_MASTER_AUTOINIT}\" }"
     fi
     if [ "${KUBE_MASTER_UNTAINT}" = "y" ] ; then
-	kubeadm_data="${kubeadm_data+$kubeadm_data, }\"untaint-master\": { \"content\": \"\" }"
+	kubeadm_data="${kubeadm_data:+$kubeadm_data, }\"untaint-master\": { \"content\": \"\" }"
     fi
 
     state="kube-master-state"
@@ -84,8 +86,15 @@ fi
 
 mkdir -p "${state}"
 touch $state/metadata.json
+if [ -n "${KUBE_METADATA}" ] ; then
+    metadata="${metadata:+$metadata, }${KUBE_METADATA}"
+fi
 if [ -n "${kubeadm_data}" ] ; then
-    echo "{  \"kubeadm\": { \"entries\": { ${kubeadm_data} } } }" > $state/metadata.json
+    metadata="${metadata:+$metadata, }\"kubeadm\": { \"entries\": { ${kubeadm_data} } }"
+fi
+if [ -n "${metadata}" ] ; then
+    metadata="{ ${metadata} }"
+    echo "${metadata}" > $state/metadata.json
 fi
 
 exec linuxkit run ${KUBE_RUN_ARGS} -networking ${KUBE_NETWORKING} -cpus ${KUBE_VCPUS} -mem ${KUBE_MEM} -state "${state}" -disk size=${KUBE_DISK} -data-file $state/metadata.json ${uefi} "${img}${suffix}"

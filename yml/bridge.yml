@@ -5,7 +5,19 @@ onboot:
       - "/bin/sh"
       - "-c"
       - |
-        set -ex
+        set -e
+        field() {
+            local f=$1
+            local d=$2
+            if [ -r "/run/config/cni.bridge/$f" ] ; then
+                cat "/run/config/cni.bridge/$f"
+            else
+                echo -e "\"$d\"\\n"
+            fi
+        }
+        subnet="$(field subnet '10.1.0.0/16')"
+        gateway="$(field gateway '10.1.0.1')"
+        ns="$(field ns '10.1.0.1')"
         cat <<EOF >/var/lib/cni/conf/10-default.conflist
         {
           "cniVersion": "0.3.1",
@@ -19,11 +31,11 @@ onboot:
               "hairpinMode": true,
               "ipam": {
                 "type": "host-local",
-                "subnet": "10.1.0.0/16",
-                "gateway": "10.1.0.1"
+                "subnet": $subnet,
+                "gateway": $gateway
               },
               "dns": {
-                "nameservers": ["10.1.0.1"]
+                "nameservers": [$ns]
               }
             },
             {
@@ -42,7 +54,11 @@ onboot:
           "type": "loopback"
         }
         EOF
+        if [ -r "/run/config/cni.bridge/debug-show-configs" ] ; then
+            grep . /var/lib/cni/conf/*.conf /var/lib/cni/conf/*.conflist
+        fi
     runtime:
       mkdir: ["/var/lib/cni/conf"]
     binds:
       - /var/lib:/var/lib
+      - /run/config:/run/config
