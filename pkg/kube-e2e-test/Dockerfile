@@ -1,9 +1,9 @@
-FROM linuxkit/alpine:cba395fbc278daee841106801aba1e1bd7e0f2f7 AS build
+FROM linuxkit/alpine:8ad3a04b70f1e93e6159143e3792e379a9b0519d AS build
 
 # When changing kubernetes_version remember to also update:
 # - scripts/mk-image-cache-lst and run `make refresh-image-caches` from top-level
 # - pkg/kubelet/Dockerfile
-ENV kubernetes_version v1.9.2
+ENV kubernetes_version v1.9.4
 
 RUN apk add -U --no-cache \
   bash \

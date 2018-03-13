@@ -1,10 +1,10 @@
 kernel:
-  image: linuxkit/kernel:4.9.78
+  image: linuxkit/kernel:4.14.26
   cmdline: "console=tty0 console=ttyS0"
 init:
-  - linuxkit/init:ce4cea7dd517063f84d9f3dc597995a5a9fa50c7
-  - linuxkit/runc:c3002ef23a6e1bfa911b3b3ff85e67143ec6eb16
-  - linuxkit/containerd:bcadd1231a1c4f337f14e8d11d5cba06f77e8453
+  - linuxkit/init:b212cfeb4bb6330e0a7547d8010fe2e8489b677a
+  - linuxkit/runc:7c39a68490a12cde830e1922f171c451fb08e731
+  - linuxkit/containerd:37e397ebfc6bd5d8e18695b121166ffd0cbfd9f0
   - linuxkit/ca-certificates:0a188e40108b6ece8c2aefdfaaad94acc84368ce
 onboot:
   - name: sysctl
@@ -40,7 +40,7 @@ services:
     image: linuxkit/sshd:4f403fe5ae53dc3e45c8f6972dced9dddf900ae6
     cgroupsPath: systemreserved/sshd
   - name: kubelet
-    image: linuxkit/kubelet:496c57f6b7d7fbea671823aa17e5d5c80ab23501
+    image: linuxkit/kubelet:c8408d29a2b75f8da5631e737fe6897a7a9dc015
     cgroupsPath: podruntime/kubelet
 files:
   - path: etc/linuxkit.yml
