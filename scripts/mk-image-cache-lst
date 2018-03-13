@@ -3,7 +3,7 @@ repo=gcr.io/google_containers
 # When changing kubernetes_version remember to also update:
 # - pkg/kubelet/Dockerfile
 # - pkg/e2e-test/Dockerfile
-kubernetes_version=v1.9.2
+kubernetes_version=v1.9.4
 kube_dns_version=1.14.7
 pause_version=3.0
 etcd_version=3.1.10

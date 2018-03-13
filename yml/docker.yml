@@ -26,7 +26,7 @@ services:
       mkdir: ["/var/lib/kubeadm", "/var/lib/cni/conf", "/var/lib/cni/bin", "/var/lib/kubelet-plugins"]
     cgroupsPath: podruntime/docker
   - name: kubernetes-docker-image-cache-common
-    image: linuxkit/kubernetes-docker-image-cache-common:d9f18cd86668c6ca249d328057f2e8a202554af4
+    image: linuxkit/kubernetes-docker-image-cache-common:3908afb90636922c6b4bcb1e68afe93e57f07881
     cgroupsPath: podruntime/common-cache
 files:
   - path: /etc/kubelet.sh.conf
