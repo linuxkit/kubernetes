@@ -21,7 +21,9 @@ services:
      - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
      - /var/lib/kubelet-plugins:/usr/libexec/kubernetes/kubelet-plugins:rshared,rbind
     rootfsPropagation: shared
-    command: ["/usr/local/bin/docker-init", "/usr/local/bin/dockerd"]
+    # `rootfsPropagation: shared` appears to be broken, workaround that issue here.
+    #command: ["/usr/local/bin/docker-init", "/usr/local/bin/dockerd"]
+    command: ["/bin/sh", "-c", "set -ex; mount --make-shared / && exec /usr/local/bin/docker-init /usr/local/bin/dockerd"]
     runtime:
       mkdir: ["/var/lib/kubeadm", "/var/lib/cni/conf", "/var/lib/cni/bin", "/var/lib/kubelet-plugins"]
     cgroupsPath: podruntime/docker
