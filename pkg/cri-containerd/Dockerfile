@@ -1,4 +1,4 @@
-FROM linuxkit/alpine:8ad3a04b70f1e93e6159143e3792e379a9b0519d AS build
+FROM linuxkit/alpine:f3cd219615428b2bd943411723eb28875275fae7 AS build
 
 RUN \
   apk add \
