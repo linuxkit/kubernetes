@@ -13,13 +13,14 @@ RUN \
   && true
 ENV GOPATH=/go PATH=$PATH:/go/bin
 
-ENV CRI_CONTAINERD_URL https://github.com/kubernetes-incubator/cri-containerd.git
+ENV CRI_CONTAINERD_URL https://github.com/containerd/cri-containerd.git
 #ENV CRI_CONTAINERD_BRANCH pull/NNN/head
-ENV CRI_CONTAINERD_COMMIT v1.0.0-beta.1
-RUN mkdir -p $GOPATH/src/github.com/kubernetes-incubator && \
-    cd $GOPATH/src/github.com/kubernetes-incubator && \
+# This is the `standalone-cri-containerd` branch, which is at the point right before standalone mode was deleted.
+ENV CRI_CONTAINERD_COMMIT 64b098a293831f742aeb3dd3e48a5405990c14c5
+RUN mkdir -p $GOPATH/src/github.com/containerd && \
+    cd $GOPATH/src/github.com/containerd && \
     git clone $CRI_CONTAINERD_URL cri-containerd
-WORKDIR $GOPATH/src/github.com/kubernetes-incubator/cri-containerd
+WORKDIR $GOPATH/src/github.com/containerd/cri-containerd
 RUN set -e; \
     if [ -n "$CRI_CONTAINERD_BRANCH" ] ; then \
         git fetch origin "$CRI_CONTAINERD_BRANCH"; \
@@ -31,7 +32,7 @@ RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
 # util-linux because a full ns-enter is required.
 # example commands: /usr/bin/nsenter --net= -F -- <ip commandline>
 #                   /usr/bin/nsenter --net=/var/run/netns/cni-5e8acebe-810d-c1b9-ced0-47be2f312fa8 -F -- <ip commandline>
-# NB the first ("--net=") is actually not valid -- see https://github.com/kubernetes-incubator/cri-containerd/issues/245
+# NB the first ("--net=") is actually not valid -- see https://github.com/containerd/cri/issues/245
 RUN apk add --no-cache --initdb -p /out \
     alpine-baselayout \
     busybox \
@@ -47,5 +48,7 @@ RUN make DESTDIR=/out install
 
 FROM scratch
 WORKDIR /
-ENTRYPOINT ["cri-containerd", "-v", "2", "--alsologtostderr", "--network-bin-dir", "/opt/cni/bin", "--network-conf-dir", "/etc/cni/net.d"]
+# `rootfsPropagation: shared` (used in `build.yml`) appears to be broken at the moment, workaround that issue here.
+#ENTRYPOINT ["cri-containerd", "--log-level", "info", "--network-bin-dir", "/opt/cni/bin", "--network-conf-dir", "/etc/cni/net.d"]
+ENTRYPOINT ["/bin/sh", "-c", "set -ex; mount --make-shared / && exec cri-containerd --log-level info --network-bin-dir /opt/cni/bin --network-conf-dir /etc/cni/net.d"]
 COPY --from=build /out /

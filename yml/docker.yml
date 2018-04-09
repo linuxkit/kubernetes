@@ -21,12 +21,14 @@ services:
      - /var/lib/cni/bin:/opt/cni/bin:rshared,rbind
      - /var/lib/kubelet-plugins:/usr/libexec/kubernetes/kubelet-plugins:rshared,rbind
     rootfsPropagation: shared
-    command: ["/usr/local/bin/docker-init", "/usr/local/bin/dockerd"]
+    # `rootfsPropagation: shared` appears to be broken, workaround that issue here.
+    #command: ["/usr/local/bin/docker-init", "/usr/local/bin/dockerd"]
+    command: ["/bin/sh", "-c", "set -ex; mount --make-shared / && exec /usr/local/bin/docker-init /usr/local/bin/dockerd"]
     runtime:
       mkdir: ["/var/lib/kubeadm", "/var/lib/cni/conf", "/var/lib/cni/bin", "/var/lib/kubelet-plugins"]
     cgroupsPath: podruntime/docker
   - name: kubernetes-docker-image-cache-common
-    image: linuxkit/kubernetes-docker-image-cache-common:11e096a191cf68ec047ec74985951d225af18197
+    image: linuxkit/kubernetes-docker-image-cache-common:a4eb1313407e72fda5789b9ca604997650126539
     cgroupsPath: podruntime/common-cache
 files:
   - path: /etc/kubelet.sh.conf
