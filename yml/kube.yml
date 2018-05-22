@@ -1,46 +1,46 @@
 kernel:
-  image: linuxkit/kernel:4.14.32
+  image: linuxkit/kernel:4.14.40
   cmdline: "console=tty0 console=ttyS0"
 init:
-  - linuxkit/init:be60dd1cb15ad39225512b6753304571d8c2fb17
-  - linuxkit/runc:1b67e997c720301c62052c8f29f5629ad751199b
-  - linuxkit/containerd:87ea9b027267b26bf5cc2d10a50c3eb9b5017df4
-  - linuxkit/ca-certificates:fb5c7bf842a330f5b47cdf71f950fe0c85f4a772
+  - linuxkit/init:c79d7587fcd0a195b8a3ecafe428a30e735cf2b4
+  - linuxkit/runc:d659de11767a419319b175700a7c6f64b8704f8c
+  - linuxkit/containerd:018fc633223d8a49f650da365603a5abccc6a423
+  - linuxkit/ca-certificates:f882e9be933fac737bf1f4d303a4bb49a12f302f
 onboot:
   - name: sysctl
-    image: linuxkit/sysctl:b51c3da02bc2fc9a53f699efc51f650ac17ffac8
+    image: linuxkit/sysctl:2a98cb7a116d4d8a71498cea0e0ad8116a9b5a3b
     binds:
      - /etc/sysctl.d/01-kubernetes.conf:/etc/sysctl.d/01-kubernetes.conf
     readonly: false
   - name: sysfs
-    image: linuxkit/sysfs:640ebdbfd8f86178c69f76bc6cdac07feffd6825
+    image: linuxkit/sysfs:dc7b876f395fa44c2b93bad6b987e418497c5b34
   - name: dhcpcd
-    image: linuxkit/dhcpcd:295b63ada3346faffddc16b631b247b234bf8fd0
+    image: linuxkit/dhcpcd:193a81bd4a93779c8a048d66e0cb1d201d0ae102
     command: ["/sbin/dhcpcd", "--nobackground", "-f", "/dhcpcd.conf", "-1"]
   - name: metadata
-    image: linuxkit/metadata:be507a0718df8ed6733dfab1d6866672f446e8fd
+    image: linuxkit/metadata:6962be42ec291db67ac9bb4267d8fd06fd464f48
   - name: format
-    image: linuxkit/format:a604e93516455f89eb5dcfa2e437c07d4cc9203b
+    image: linuxkit/format:9a537dd3eaefd02dbc01c598b843fba33da8c1a5
   - name: mounts
-    image: linuxkit/mount:0eba853dfa99f01166831c30f37f6bb818b61f2f
+    image: linuxkit/mount:a718496fa5ea2a7a9f7552eac64c7f3699fb6a86
     command: ["/usr/bin/mountie", "/var/lib/"]
 services:
   - name: getty
-    image: linuxkit/getty:32247863cace34f3b441b4c5d9d3f5cb5f64d189
+    image: linuxkit/getty:3fa8e2240c1392ba4af508d3e6be8548443b12cc
     env:
      - INSECURE=true
     cgroupsPath: systemreserved/getty
   - name: rngd
-    image: linuxkit/rngd:00b9cc2e63ba3d5384f44bf01fa0d2bd6a97845a
+    image: linuxkit/rngd:aaa9a63cbc9c04421b160b85aef4df5fa5d0f5f0
     cgroupsPath: systemreserved/rngd
   - name: ntpd
-    image: linuxkit/openntpd:bf56d222d258b60bae4d286791bc76003e58db55
+    image: linuxkit/openntpd:413ee972bc71a66030c50bc8daf7385e5c8ea269
     cgroupsPath: systemreserved/ntpd
   - name: sshd
-    image: linuxkit/sshd:39d6bdc9a7489ceffa761ad5cb96c87b50d6732d
+    image: linuxkit/sshd:5544de2376475f6685e12bdc10bfe49f4695873a
     cgroupsPath: systemreserved/sshd
   - name: kubelet
-    image: linuxkit/kubelet:38bea97a5600bd442dc49ab453a71b3b8018b6d5
+    image: linuxkit/kubelet:bcff9a97b3ecaf204ca7ee122f5a071a3dc97d4c
     cgroupsPath: podruntime/kubelet
 files:
   - path: etc/linuxkit.yml

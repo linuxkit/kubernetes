@@ -106,7 +106,7 @@ jobs:
             tar xfO /tmp/docker.tgz docker/docker > /workspace/bin/docker
             # To update find the most recent successful build at https://circleci.com/gh/linuxkit/linuxkit/tree/master
             # and find the link + SHA256 in the `Artifacts` tab
-            curl -fsSL -o /workspace/bin/linuxkit https://github.com/linuxkit/linuxkit/releases/download/v0.3/linuxkit-linux-amd64
+            curl -fsSL -o /workspace/bin/linuxkit https://github.com/linuxkit/linuxkit/releases/download/v0.4/linuxkit-linux-amd64
             curl -fsSL -o /workspace/bin/manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64
             curl -fsSL -o /workspace/bin/notary https://github.com/theupdateframework/notary/releases/download/v0.6.0/notary-Linux-amd64
 
@@ -117,7 +117,7 @@ jobs:
             echo "Checking checksums"
             sha256sum -c <<EOF
             f5ea546a4ccd64fbb71825f964171256388f1181b000f3c56747075e383c81c6  /workspace/bin/docker
-            7058bb86c6eeab6faf563c7c61537579e7a493b9e1f74835a554f0ac7345e1bf  /workspace/bin/linuxkit
+            57074fda28aefdefaec96866b178d1d0b8d3e251725c506d4e22851032733649  /workspace/bin/linuxkit
             e4ca2ef0015a4be8597d31d9e3e70d88da33924ae72b0999e9f3b79304d4710d  /workspace/bin/manifest-tool
             f4e421b3bb3c32c39372f7f02fbe80c67580cccd381f9722b1c702b3ab63a1c7  /workspace/bin/notary
             EOF
