@@ -48,7 +48,5 @@ RUN make DESTDIR=/out install
 
 FROM scratch
 WORKDIR /
-# `rootfsPropagation: shared` (used in `build.yml`) appears to be broken at the moment, workaround that issue here.
-#ENTRYPOINT ["cri-containerd", "--log-level", "info", "--network-bin-dir", "/opt/cni/bin", "--network-conf-dir", "/etc/cni/net.d"]
-ENTRYPOINT ["/bin/sh", "-c", "set -ex; mount --make-shared / && exec cri-containerd --log-level info --network-bin-dir /opt/cni/bin --network-conf-dir /etc/cni/net.d"]
+ENTRYPOINT ["cri-containerd", "--log-level", "info", "--network-bin-dir", "/opt/cni/bin", "--network-conf-dir", "/etc/cni/net.d"]
 COPY --from=build /out /
