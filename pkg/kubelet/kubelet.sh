@@ -61,6 +61,29 @@ done
 
 echo "kubelet.sh: ${await} has arrived" 2>&1
 
+if [ -f "/run/config/kubelet-config.json" ]; then
+    echo "Found kubelet configuration from /run/config/kubelet-config.json"
+else
+    echo "Generate kubelet configuration to /run/config/kubelet-config.json"
+    : ${KUBE_CLUSTER_DNS:='"10.96.0.10"'}
+    cat > /run/config/kubelet-config.json << EOF
+    {
+        "kind": "KubeletConfiguration",
+        "apiVersion": "kubelet.config.k8s.io/v1beta1",
+        "staticPodPath": "/etc/kubernetes/manifests",
+        "clusterDNS": [
+            ${KUBE_CLUSTER_DNS}
+        ],
+        "clusterDomain": "cluster.local",
+        "cgroupsPerQOS": false,
+        "enforceNodeAllocatable": [],
+        "kubeReservedCgroup": "podruntime",
+        "systemReservedCgroup": "systemreserved",
+        "cgroupRoot": "kubepods"
+    }
+EOF
+fi
+
 mkdir -p /etc/kubernetes/manifests
 
 # If using --cgroups-per-qos then need to use --cgroup-root=/ and not
@@ -71,19 +94,13 @@ mkdir -p /etc/kubernetes/manifests
 #      - /usr/bin/kubelet.sh
 #      - --cgroup-root=/
 #      - --cgroups-per-qos
-exec kubelet --kubeconfig=/etc/kubernetes/kubelet.conf \
-	      --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
-	      --pod-manifest-path=/etc/kubernetes/manifests \
-	      --allow-privileged=true \
-	      --cluster-dns=10.96.0.10 \
-	      --cluster-domain=cluster.local \
-	      --cgroups-per-qos=false \
-	      --enforce-node-allocatable= \
-	      --network-plugin=cni \
-	      --cni-conf-dir=/etc/cni/net.d \
-	      --cni-bin-dir=/opt/cni/bin \
-	      --cadvisor-port=0 \
-	      --kube-reserved-cgroup=podruntime \
-	      --system-reserved-cgroup=systemreserved \
-	      --cgroup-root=kubepods \
-	      $KUBELET_ARGS $@
+exec kubelet \
+          --config=/run/config/kubelet-config.json \
+          --kubeconfig=/etc/kubernetes/kubelet.conf \
+          --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
+          --allow-privileged=true \
+          --network-plugin=cni \
+          --cni-conf-dir=/etc/cni/net.d \
+          --cni-bin-dir=/opt/cni/bin \
+          --cadvisor-port=0 \
+          $KUBELET_ARGS $@
